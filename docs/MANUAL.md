@@ -65,7 +65,7 @@ Cada fila es una oferta elegida:
 
 | Dato | Para qué se usa | Dónde queda |
 |---|---|---|
-| Tu HV base (experiencia, formación, contacto, enlaces) | Calificar ofertas y generar HV adaptadas | Tu Google Drive; se envía a la API de Gemini en cada evaluación y generación |
+| Tu HV base (experiencia, formación, contacto, enlaces) | Calificar ofertas y generar HV adaptadas | Variable `HV_BASE_TEXT` del `.env` en la VM; se envía a la API de Gemini en cada evaluación y generación |
 | Ofertas de empleo | Seleccionar las mejores | Tu Google Sheet; las descartadas se recuerdan 21 días para no reevaluarlas |
 | HV adaptadas (Doc y PDF) | Postularte | Carpeta `HV` de tu Drive; se borran a los 15 días (recuperables 30 días en la papelera) |
 | Credenciales (Gemini, Google OAuth2, Telegram) | Conectar los servicios | `.env` y credenciales de n8n en la VM; nunca en el repositorio |
@@ -86,5 +86,8 @@ Cada fila es una oferta elegida:
 
 - **Tu HV se envía a un proveedor de IA (Google Gemini)** en cada evaluación: no incluyas datos que
   no pondrías en una postulación (documento de identidad, dirección exacta).
+- En el **nivel gratuito** de la API de Gemini, los términos de Google permiten usar lo que envías
+  (tu HV y las ofertas) para mejorar sus productos. Si no quieres eso, usa una key de un proyecto
+  con facturación (nivel de pago).
 - Entra a n8n solo por el túnel SSH del despliegue (`localhost:5678`); no abras ese puerto a internet.
 - Revisa siempre la HV adaptada antes de enviarla.
