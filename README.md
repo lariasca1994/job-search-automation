@@ -265,4 +265,6 @@ Todo se ajusta desde el `.env`, sin tocar los workflows:
 
 ## 8. Licencia
 
+> 📘 **[Manual de usuario](docs/MANUAL.md)**: cómo usar el sistema campo por campo, qué datos se ingresan y qué garantiza en seguridad.
+
 MIT.
