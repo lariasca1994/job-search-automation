@@ -1,0 +1,7 @@
+.env
+n8n_data/
+node_modules/
+.DS_Store
+*.log
+cbs_errores.txt
+*.md

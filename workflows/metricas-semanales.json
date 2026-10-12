@@ -1,0 +1,219 @@
+{
+    "name": "Metricas semanales GO",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "52 11 * * 5"
+                        }
+                    ]
+                }
+            },
+            "id": "d79738d3-446c-4f8b-9267-333b5a1a43ad",
+            "name": "Disparador (Viernes 11:52)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                6640,
+                1200
+            ],
+            "notes": "Reporte semanal los viernes 11:52, antes de que la VM se apague a las 12:00. La VM se enciende 9:00 y se apaga 12:00 (hora local de ZONA_HORARIA, L-V, politica de horario de la VM). docker-compose.yml fija la zona horaria con ZONA_HORARIA, asi que esta hora es la hora local. Orden del dia: scrapers 9:05/9:20/9:35/9:50 -> HV adaptadas 10:05-11:35 -> resumen Telegram 11:45 -> metricas (viernes) 11:52."
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "name": "telegram_bot_token",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_BOT_TOKEN }}",
+                            "id": "e1e1a1a1-0001-4001-8001-000000000001"
+                        },
+                        {
+                            "name": "telegram_chat_id",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_CHAT_ID }}",
+                            "id": "e1e1a1a1-0001-4001-8001-000000000002"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "d136edd7-7181-4867-b389-135ef955dd04",
+            "name": "Config (Telegram)",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                6864,
+                1200
+            ],
+            "notes": "El token del bot y el chat id se leen de las variables de entorno TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID (definidas en tu .env / docker-compose) -> nunca quedan pegadas en este JSON."
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $env.SHEET_ID }}",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Primera pestana"
+                },
+                "options": {}
+            },
+            "id": "725d0733-0e51-4372-8e1f-30ea133cde94",
+            "name": "Leer planilla",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                7088,
+                1200
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "name": "Google Sheets account"
+                }
+            },
+            "notes": "Lee TODAS las filas de la planilla (histórico completo, no solo la semana) para calcular tasas acumuladas — sin esto las métricas de pocos días son ruido estadístico."
+        },
+        {
+            "parameters": {
+                "jsCode": "// Calcula metricas acumuladas del embudo: deteccion -> match alto -> postulacion -> entrevista,\n// mas si la HV adaptada por IA realmente correlaciona con mas entrevistas.\nconst rows = $input.all().map(i => i.json);\nconst total = rows.length;\n\nconst norm = (s) => String(s || '').trim().toLowerCase();\nconst estadoNorm = (r) => norm(r.estado);\nconst tieneHv = (r) => !!(r.hv_adaptada && String(r.hv_adaptada).trim());\n\nconst conMatch = rows.filter(r => r.match_pct !== undefined && r.match_pct !== '' && !isNaN(Number(r.match_pct)));\nconst altoMatch = conMatch.filter(r => Number(r.match_pct) >= 90);\n\nconst postuladas = rows.filter(r => estadoNorm(r) && estadoNorm(r) !== 'pendiente');\nconst entrevista = rows.filter(r => estadoNorm(r) === 'entrevista');\nconst descartado = rows.filter(r => estadoNorm(r) === 'descartado');\n\nconst altoMatchPostuladas = altoMatch.filter(r => estadoNorm(r) && estadoNorm(r) !== 'pendiente');\n\nconst conHv = rows.filter(tieneHv);\nconst conHvPostuladas = conHv.filter(r => estadoNorm(r) && estadoNorm(r) !== 'pendiente');\nconst conHvEntrevista = conHv.filter(r => estadoNorm(r) === 'entrevista');\n\nconst sinHvPostuladas = postuladas.filter(r => !tieneHv(r));\nconst sinHvEntrevista = sinHvPostuladas.filter(r => estadoNorm(r) === 'entrevista');\n\nconst pct = (num, den) => (den > 0 ? Math.round((num / den) * 1000) / 10 : null);\n\nconst avgMatch = (list) => {\n  const vals = list.map((r) => Number(r.match_pct)).filter((n) => !isNaN(n));\n  if (!vals.length) return null;\n  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;\n};\n\nconst porFuente = {};\nfor (const r of rows) {\n  const f = r.fuente || 'sin fuente';\n  porFuente[f] = porFuente[f] || { total: 0, postuladas: 0 };\n  porFuente[f].total++;\n  if (estadoNorm(r) && estadoNorm(r) !== 'pendiente') porFuente[f].postuladas++;\n}\n\nreturn [{\n  json: {\n    total,\n    conMatch: conMatch.length,\n    altoMatch: altoMatch.length,\n    postuladas: postuladas.length,\n    entrevista: entrevista.length,\n    descartado: descartado.length,\n    conHv: conHv.length,\n    tasaAltoMatchAPostulacion: pct(altoMatchPostuladas.length, altoMatch.length),\n    tasaEntrevistaSobrePostuladas: pct(entrevista.length, postuladas.length),\n    tasaEntrevistaConHv: pct(conHvEntrevista.length, conHvPostuladas.length),\n    tasaEntrevistaSinHv: pct(sinHvEntrevista.length, sinHvPostuladas.length),\n    promedioMatchGeneral: avgMatch(conMatch),\n    promedioMatchEntrevista: avgMatch(entrevista),\n    porFuente,\n  },\n}];"
+            },
+            "id": "dc5b4776-3dc5-4a81-b4bb-36bdd71e9aaf",
+            "name": "Calcular metricas",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                7312,
+                1200
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const m = $input.first().json;\n\nconst linea = (label, val, suf = '%') => (val === null || val === undefined ? `${label}: sin datos todavia` : `${label}: ${val}${suf}`);\n\nlet texto = `\\ud83d\\udcca *Metricas semanales \\u2014 busqueda laboral*\\n\\n`;\ntexto += `Total ofertas en la planilla: ${m.total}\\n`;\ntexto += `Con match calculado: ${m.conMatch} | Alto match (\\u226590%): ${m.altoMatch}\\n`;\ntexto += `Postuladas: ${m.postuladas} | En entrevista: ${m.entrevista} | Descartadas: ${m.descartado}\\n\\n`;\n\ntexto += `*Embudo*\\n`;\ntexto += `${linea('Alto match \\u2192 te postulaste', m.tasaAltoMatchAPostulacion)}\\n`;\ntexto += `${linea('Postulacion \\u2192 entrevista', m.tasaEntrevistaSobrePostuladas)}\\n\\n`;\n\ntexto += `*\\u00bfEl match score predice bien?*\\n`;\ntexto += `${linea('Match promedio (todas las scoreadas)', m.promedioMatchGeneral)}\\n`;\ntexto += `${linea('Match promedio (las que llegaron a entrevista)', m.promedioMatchEntrevista)}\\n\\n`;\n\ntexto += `*\\u00bfLa HV adaptada ayuda?*\\n`;\ntexto += `HV generada en ${m.conHv} oferta(s)\\n`;\ntexto += `${linea('Entrevista con HV adaptada', m.tasaEntrevistaConHv)}\\n`;\ntexto += `${linea('Entrevista sin HV adaptada', m.tasaEntrevistaSinHv)}\\n\\n`;\n\nconst fuentes = Object.entries(m.porFuente || {});\nif (fuentes.length) {\n  texto += `*Por fuente*\\n`;\n  for (const [fuente, d] of fuentes) {\n    texto += `${fuente}: ${d.total} detectadas, ${d.postuladas} postuladas\\n`;\n  }\n}\n\nreturn [{ json: { texto: texto.trim() } }];"
+            },
+            "id": "03880c71-643d-454e-9889-ad03cd1188ce",
+            "name": "Armar mensaje",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                7536,
+                1200
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $('Config (Telegram)').first().json.telegram_bot_token }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ chat_id: $('Config (Telegram)').first().json.telegram_chat_id, text: $json.texto, parse_mode: 'Markdown' }) }}",
+                "options": {}
+            },
+            "id": "2477568d-72e0-456e-b98a-cd8e7be3d43c",
+            "name": "Enviar Telegram",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                7760,
+                1200
+            ]
+        },
+        {
+            "parameters": {},
+            "id": "6dec5220-de34-43d4-8106-968a252bad5e",
+            "name": "Ejecutar a mano (prueba)",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                6640,
+                1400
+            ],
+            "notes": "Para probar el workflow desde el editor (Execute workflow) o por CLI (n8n execute --id=...). No afecta el horario automatico."
+        }
+    ],
+    "connections": {
+        "Config (Telegram)": {
+            "main": [
+                [
+                    {
+                        "node": "Leer planilla",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leer planilla": {
+            "main": [
+                [
+                    {
+                        "node": "Calcular metricas",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Calcular metricas": {
+            "main": [
+                [
+                    {
+                        "node": "Armar mensaje",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Armar mensaje": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar Telegram",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Disparador (Viernes 11:52)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (Telegram)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ejecutar a mano (prueba)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (Telegram)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "nodeGroups": [],
+    "id": "6omWyEmyW6Cljncy",
+    "tags": []
+}

@@ -1,0 +1,354 @@
+{
+    "name": "Limpieza Drive HV GO",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "40 11 * * 5"
+                        }
+                    ]
+                }
+            },
+            "id": "9e8ce831-4cd6-476e-8ff0-3ad37e924199",
+            "name": "Disparador (Viernes 11:40)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                0
+            ],
+            "notes": "Viernes 11:40 (hora local), dentro de la ventana 9:00-12:00 de la VM. No toca la planilla."
+        },
+        {
+            "parameters": {},
+            "id": "45a75ef3-7c7b-4ddc-ba77-880b0b47e8ed",
+            "name": "Ejecutar a mano (prueba)",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                0,
+                200
+            ],
+            "notes": "Para probar desde el editor o por CLI."
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "076b2486-d2ed-4251-9b59-f58579ce8101",
+                            "name": "dias_antiguedad",
+                            "type": "number",
+                            "value": 15
+                        },
+                        {
+                            "id": "64ab74c8-2912-4f55-a3ca-213d4c475c3c",
+                            "name": "prefijo",
+                            "type": "string",
+                            "value": "={{ ($env.HV_PREFIJO_ARCHIVO || '') + '_' }}"
+                        },
+                        {
+                            "id": "c7bcb620-924f-4f01-8d58-40a36daf999f",
+                            "name": "telegram_bot_token",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_BOT_TOKEN }}"
+                        },
+                        {
+                            "id": "60fcca17-7f7a-44b1-8a09-14bf4894f3a9",
+                            "name": "telegram_chat_id",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_CHAT_ID }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "238222a9-5aa7-4503-92b9-fb302e55371e",
+            "name": "Config (limpieza)",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                220,
+                100
+            ],
+            "notes": "dias_antiguedad: se mandan a la papelera las HV (Doc y PDF) creadas hace mas de estos dias. prefijo: HV_PREFIJO_ARCHIVO del .env; solo se tocan archivos cuyo nombre empieza asi."
+        },
+        {
+            "parameters": {
+                "url": "https://www.googleapis.com/drive/v3/files",
+                "authentication": "predefinedCredentialType",
+                "nodeCredentialType": "googleDocsOAuth2Api",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "q",
+                            "value": "={{ \"name contains '\" + $json.prefijo + \"' and trashed = false and (mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/pdf')\" }}"
+                        },
+                        {
+                            "name": "fields",
+                            "value": "files(id,name,mimeType,createdTime)"
+                        },
+                        {
+                            "name": "pageSize",
+                            "value": "1000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "821d62ea-04b7-419f-a80a-47315b801e15",
+            "name": "Listar HV en Drive",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                440,
+                100
+            ],
+            "credentials": {
+                "googleDocsOAuth2Api": {
+                    "name": "Google Docs account"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 3000,
+            "notes": "Lista los Google Docs y PDF de HV (carpeta HV y los antiguos de la raiz)."
+        },
+        {
+            "parameters": {
+                "jsCode": "// Separa las HV con mas de N dias. Doble filtro por nombre (debe EMPEZAR con el prefijo) y tipo,\n// para no tocar ningun otro archivo del Drive.\nconst cfg = $('Config (limpieza)').first().json;\nif (String(cfg.prefijo).length < 5) throw new Error('HV_PREFIJO_ARCHIVO vacio o muy corto en el .env: no se borra nada por seguridad.');\nconst limite = Date.now() - Number(cfg.dias_antiguedad) * 24 * 3600 * 1000;\nconst TIPOS = ['application/vnd.google-apps.document', 'application/pdf'];\nconst todos = ($input.first().json.files || []).filter((f) => String(f.name).startsWith(cfg.prefijo) && TIPOS.includes(f.mimeType));\nconst viejos = todos.filter((f) => new Date(f.createdTime).getTime() < limite);\nreturn [{ json: { revisados: todos.length, total: viejos.length, archivos: viejos.map((f) => ({ id: f.id, name: f.name })) } }];"
+            },
+            "id": "8a5a466d-9edb-490a-bc6c-1b3d590ccd91",
+            "name": "Filtrar mas de 15 dias",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                660,
+                100
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "81fd5c11-b447-46a4-ae5c-04758798a587",
+                            "leftValue": "={{ $json.total }}",
+                            "rightValue": 0,
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "looseTypeValidation": true,
+                "options": {}
+            },
+            "id": "6066446b-9e76-4b40-aa1d-e2830b89b8cf",
+            "name": "Hay algo que borrar?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                880,
+                100
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "return $input.first().json.archivos.map((f) => ({ json: f }));"
+            },
+            "id": "2d339f1b-fb1a-4aad-b96f-7819c9ca951d",
+            "name": "Un item por archivo",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1100,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "method": "PATCH",
+                "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}?fields=id,name,trashed",
+                "authentication": "predefinedCredentialType",
+                "nodeCredentialType": "googleDocsOAuth2Api",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "{\"trashed\": true}",
+                "options": {}
+            },
+            "id": "4c4c7658-ee2c-4e5e-b506-061848bf55c3",
+            "name": "Mover a la papelera",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1320,
+                0
+            ],
+            "credentials": {
+                "googleDocsOAuth2Api": {
+                    "name": "Google Docs account"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 3000,
+            "notes": "Papelera, no borrado definitivo: se puede recuperar durante 30 dias; despues Google la vacia sola."
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $('Config (limpieza)').first().json.telegram_bot_token }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ chat_id: $('Config (limpieza)').first().json.telegram_chat_id, text: '🧹 Limpieza del Drive: ' + $('Mover a la papelera').all().filter(i => i.json.trashed).length + ' archivo(s) de HV (Docs y PDF) con más de ' + $('Config (limpieza)').first().json.dias_antiguedad + ' días enviados a la papelera.\\nSe pueden recuperar desde la papelera durante 30 días.' }) }}",
+                "options": {}
+            },
+            "id": "3f4675ed-d462-41ca-bd45-16c9c0b830d5",
+            "name": "Avisar limpieza",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1540,
+                0
+            ],
+            "executeOnce": true
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $('Config (limpieza)').first().json.telegram_bot_token }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ chat_id: $('Config (limpieza)').first().json.telegram_chat_id, text: '🧹 Limpieza del Drive: nada que borrar. Hay ' + $('Filtrar mas de 15 dias').first().json.revisados + ' archivo(s) de HV y ninguno tiene más de ' + $('Config (limpieza)').first().json.dias_antiguedad + ' días.' }) }}",
+                "options": {}
+            },
+            "id": "348a4116-974b-492c-a040-df0a1b8aabf6",
+            "name": "Avisar sin cambios",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1100,
+                200
+            ],
+            "executeOnce": true
+        }
+    ],
+    "connections": {
+        "Disparador (Viernes 11:40)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (limpieza)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ejecutar a mano (prueba)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (limpieza)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Config (limpieza)": {
+            "main": [
+                [
+                    {
+                        "node": "Listar HV en Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Listar HV en Drive": {
+            "main": [
+                [
+                    {
+                        "node": "Filtrar mas de 15 dias",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filtrar mas de 15 dias": {
+            "main": [
+                [
+                    {
+                        "node": "Hay algo que borrar?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Hay algo que borrar?": {
+            "main": [
+                [
+                    {
+                        "node": "Un item por archivo",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Avisar sin cambios",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Un item por archivo": {
+            "main": [
+                [
+                    {
+                        "node": "Mover a la papelera",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Mover a la papelera": {
+            "main": [
+                [
+                    {
+                        "node": "Avisar limpieza",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "id": "LimpiezaDriveHV1",
+    "tags": []
+}

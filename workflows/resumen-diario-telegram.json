@@ -1,0 +1,432 @@
+{
+    "name": "Resumen diario por Telegram GO",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "45 11 * * 1-5"
+                        }
+                    ]
+                }
+            },
+            "id": "8d20b16b-20f6-4f91-9a25-9edad4e76dc9",
+            "name": "Disparador (L-V 11:45)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                6640,
+                928
+            ],
+            "notes": "Resumen del dia a las 11:45, despues de la ultima corrida de HV (11:35) y antes de que la VM se apague a las 12:00. Incluye viernes. La VM se enciende 9:00 y se apaga 12:00 (hora local de ZONA_HORARIA, L-V, politica de horario de la VM). docker-compose.yml fija la zona horaria con ZONA_HORARIA, asi que esta hora es la hora local. Orden del dia: scrapers 9:05/9:20/9:35/9:50 -> HV adaptadas 10:05-11:35 -> resumen Telegram 11:45 -> metricas (viernes) 11:52."
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "name": "telegram_bot_token",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_BOT_TOKEN }}",
+                            "id": "668c9d81-da3e-4f01-98d1-315efbb1ab14"
+                        },
+                        {
+                            "name": "telegram_chat_id",
+                            "type": "string",
+                            "value": "={{ $env.TELEGRAM_CHAT_ID }}",
+                            "id": "ea0b61fa-4ae7-41c6-9715-ed69fb6cc8b0"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "b1895807-2cd4-4563-be37-659029e45f93",
+            "name": "Config (Telegram)",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                6864,
+                928
+            ],
+            "notes": "El token del bot y el chat id se leen de las variables de entorno TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID (definidas en tu .env / docker-compose) -> nunca quedan pegadas en este JSON."
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $env.SHEET_ID }}",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Primera pestana"
+                },
+                "options": {}
+            },
+            "id": "f2a49798-c079-4598-b3a5-e783b67afe48",
+            "name": "Leer planilla",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                7088,
+                928
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "name": "Google Sheets account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "// Resumen del dia: ofertas con match >= 90% que todavia no se notificaron, con el link a la\n// HV adaptada si ya esta lista. Usa parse_mode HTML escapando el texto: con Markdown, un\n// titulo con \"_\" o \"*\" hacia que Telegram rechazara el mensaje completo (error 400) en silencio.\nconst UMBRAL = 90;\nconst cfg = $('Config (Telegram)').first().json;\nconst esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n\nconst items = $input.all().map((i) => i.json)\n  .filter((j) => j.url && Number(j.match_pct) >= UMBRAL && !String(j.notificado ?? '').trim())\n  .sort((a, b) => Number(b.match_pct) - Number(a.match_pct))\n  .slice(0, 20); // 4 fuentes x 5 ofertas\n\nlet texto;\nif (!items.length) {\n  texto = '✅ Busqueda de hoy terminada: no hubo ofertas nuevas con match de ' + UMBRAL + '% o mas.';\n} else {\n  const lineas = items.map((j, idx) => {\n    const doc = String(j.hv_adaptada || '').startsWith('http');\n    const pdf = String(j.hv_pdf || '').startsWith('http');\n    const hv = doc || pdf\n      ? '\\n   📄 HV: ' + [pdf ? '<a href=\"' + esc(j.hv_pdf) + '\">PDF</a>' : '', doc ? '<a href=\"' + esc(j.hv_adaptada) + '\">Google Docs</a>' : ''].filter(Boolean).join(' · ')\n      : '\\n   📄 HV adaptada: pendiente';\n    return (idx + 1) + '. <b>' + esc(j.titulo) + '</b> - ' + esc(j.empresa) +\n      '\\n   📍 ' + esc(j.ubicacion) + ' | 🎯 ' + esc(j.match_pct) + '% | ' + esc(j.fuente) +\n      '\\n   💡 ' + esc(j.ats_tip) + hv;\n  });\n  texto = '🔥 <b>Ofertas con match ≥ ' + UMBRAL + '% de hoy</b> (' + items.length + ')\\n\\n' + lineas.join('\\n\\n');\n}\nif (texto.length > 4000) texto = texto.slice(0, 3990) + '\\n…';\n\nconst payload = { chat_id: cfg.telegram_chat_id, text: texto, parse_mode: 'HTML', disable_web_page_preview: true };\nif (items.length) {\n  payload.reply_markup = { inline_keyboard: items.map((j) => ([{ text: '🔗 ' + String(j.titulo || 'Oferta').slice(0, 40), url: j.url }])) };\n}\nreturn [{ json: { payload, urls: items.map((j) => j.url) } }];\n"
+            },
+            "id": "bfb4c4ec-f873-4770-8e0e-c2d128a543c5",
+            "name": "Armar resumen",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                7296,
+                928
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $('Config (Telegram)').first().json.telegram_bot_token }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify($json.payload) }}",
+                "options": {}
+            },
+            "id": "56665a64-f184-4e2c-85f7-edb3efb01f58",
+            "name": "Enviar Telegram",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                7520,
+                928
+            ],
+            "notes": "Si Telegram rechaza el mensaje, la ejecucion queda en rojo (antes el error se ocultaba con neverError)."
+        },
+        {
+            "parameters": {
+                "jsCode": "const urls = $('Armar resumen').first().json.urls || [];\nreturn urls.map(url => ({ json: { url, notificado: true } }));"
+            },
+            "id": "f1eb77ae-b265-4b9f-b406-1a65c64a5a4e",
+            "name": "Preparar marcado",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                7744,
+                928
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $env.SHEET_ID }}",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Primera pestana"
+                },
+                "columns": {
+                    "mappingMode": "autoMapInputData",
+                    "value": {},
+                    "matchingColumns": [
+                        "url"
+                    ],
+                    "schema": [
+                        {
+                            "id": "notificado",
+                            "displayName": "notificado",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "perfil_sugerido",
+                            "displayName": "perfil_sugerido",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fuente",
+                            "displayName": "fuente",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "titulo",
+                            "displayName": "titulo",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "empresa",
+                            "displayName": "empresa",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "ubicacion",
+                            "displayName": "ubicacion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "url",
+                            "displayName": "url",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "keyword_busqueda",
+                            "displayName": "keyword_busqueda",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fecha_deteccion",
+                            "displayName": "fecha_deteccion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fecha_postulacion",
+                            "displayName": "fecha_postulacion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "generar",
+                            "displayName": "generar",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "hv_adaptada",
+                            "displayName": "hv_adaptada",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "estado",
+                            "displayName": "estado",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "match_pct",
+                            "displayName": "match_pct",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "ats_tip",
+                            "displayName": "ats_tip",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "row_number",
+                            "displayName": "row_number",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "number",
+                            "canBeUsedToMatch": true,
+                            "readOnly": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "id": "8c0ea815-320f-4438-8882-b014982f2cee",
+            "name": "Marcar notificado",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                7968,
+                928
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "name": "Google Sheets account"
+                }
+            }
+        },
+        {
+            "parameters": {},
+            "id": "642b0d2d-86f1-4c7c-b8d7-bcf0a71f4dac",
+            "name": "Ejecutar a mano (prueba)",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                6640,
+                1128
+            ],
+            "notes": "Para probar el workflow desde el editor (Execute workflow) o por CLI (n8n execute --id=...). No afecta el horario automatico."
+        }
+    ],
+    "connections": {
+        "Config (Telegram)": {
+            "main": [
+                [
+                    {
+                        "node": "Leer planilla",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leer planilla": {
+            "main": [
+                [
+                    {
+                        "node": "Armar resumen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Armar resumen": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar Telegram",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Enviar Telegram": {
+            "main": [
+                [
+                    {
+                        "node": "Preparar marcado",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Preparar marcado": {
+            "main": [
+                [
+                    {
+                        "node": "Marcar notificado",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Disparador (L-V 11:45)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (Telegram)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ejecutar a mano (prueba)": {
+            "main": [
+                [
+                    {
+                        "node": "Config (Telegram)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "nodeGroups": [],
+    "id": "WfjzkeVvrbFjsnRs",
+    "tags": []
+}

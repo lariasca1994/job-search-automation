@@ -1,0 +1,63 @@
+services:
+  n8n:
+    # Version fija (la probada con estos workflows). Con "latest", cualquier
+    # recreacion del contenedor podria traer una version con cambios incompatibles.
+    image: docker.n8n.io/n8nio/n8n:2.39.8
+
+    # Sin DNS forzados: el contenedor usa el resolvedor del host (en Google Cloud,
+    # el DNS interno). Con DNS publicos forzados hubo fallos intermitentes (EAI_AGAIN).
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      # Solo en localhost: al editor se entra por tunel SSH (ver DESPLIEGUE-GOOGLE-CLOUD.md),
+      # nunca expuesto directo a internet.
+      - "127.0.0.1:5678:5678"
+    environment:
+      # Zona horaria de los Schedule Trigger (ventana 9:00-12:00 L-V). Sin esto disparan en UTC.
+      - GENERIC_TIMEZONE=${ZONA_HORARIA:-UTC}
+      - TZ=${ZONA_HORARIA:-UTC}
+
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-true}
+
+      # Los workflows leen su configuracion con $env.* (nodos Config).
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
+      # Los nodos de match/HV hacen varias llamadas a Gemini con reintentos; el
+      # limite por defecto de 5 min por nodo Code se queda corto en dias con
+      # muchas ofertas.
+      - N8N_RUNNERS_TASK_TIMEOUT=900
+
+      # --- Secretos (ver .env.example)
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.8-flash}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+
+      # --- Datos de quien busca empleo
+      - SHEET_ID=${SHEET_ID}
+      - HV_BASE_TEXT=${HV_BASE_TEXT}
+      - HV_PREFIJO_ARCHIVO=${HV_PREFIJO_ARCHIVO}
+      - DRIVE_CARPETA=${DRIVE_CARPETA:-HV}
+
+      # --- Busqueda (perfiles, pais, ubicacion y filtros)
+      - PERFILES_BUSQUEDA=${PERFILES_BUSQUEDA}
+      - PAIS=${PAIS:-}
+      - ZONA_REGEX=${ZONA_REGEX:-.}
+      - EXCLUIR_PUESTO_REGEX=${EXCLUIR_PUESTO_REGEX:-}
+      - EXCLUIR_RUBRO_REGEX=${EXCLUIR_RUBRO_REGEX:-}
+      - COMPUTRABAJO_DOMINIO=${COMPUTRABAJO_DOMINIO:-co.computrabajo.com}
+      - UBICACION_COMPUTRABAJO=${UBICACION_COMPUTRABAJO:-}
+      - UBICACION_ELEMPLEO=${UBICACION_ELEMPLEO:-}
+      - UBICACION_MAGNETO=${UBICACION_MAGNETO:-}
+      - UBICACION_LINKEDIN=${UBICACION_LINKEDIN:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Para importar los workflows por CLI: docker exec -u node n8n n8n import:workflow --separate --input=/workflows
+      - ./workflows:/workflows:ro
+
+volumes:
+  n8n_data:

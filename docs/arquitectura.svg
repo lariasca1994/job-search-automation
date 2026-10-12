@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 820" width="1480" height="820" font-family="Segoe UI, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif" role="img" aria-label="Arquitectura de Automatización de búsqueda laboral">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#16233F"/><stop offset="1" stop-color="#0A1020"/></radialGradient>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity=".45"/></filter>
+  <marker id="a7C8BA1" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C8BA1"/></marker><marker id="s7C8BA1" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C8BA1"/></marker>
+</defs>
+<rect width="1480" height="820" rx="26" fill="url(#bg)"/>
+<text x="36" y="46" font-size="21" font-weight="800" fill="#F8FAFC">Automatización de búsqueda laboral</text>
+<text x="36" y="70" font-size="12.5" fill="#94A3B8">n8n + IA: busca ofertas, las califica contra la hoja de vida, adapta la HV y avisa por Telegram</text>
+<rect x="35" y="150" width="225" height="480" rx="26" fill="#475569" fill-opacity=".07" stroke="#475569" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="7 6"/><rect x="53" y="138" width="136.5" height="24" rx="12" fill="#475569"/><text x="121.3" y="154" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Portales de empleo</text>
+<rect x="330" y="130" width="690" height="590" rx="26" fill="#4285F4" fill-opacity=".07" stroke="#4285F4" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="7 6"/><rect x="348" y="118" width="238.1" height="24" rx="12" fill="#4285F4"/><text x="467.0" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Google Cloud · VM con Docker (n8n)</text>
+<text x="1002" y="706" text-anchor="end" font-size="10.5" fill="#4285F4" fill-opacity=".9">L-V · se enciende 9:00 y se apaga 12:00</text>
+<rect x="1095" y="130" width="350" height="150" rx="26" fill="#8E75B2" fill-opacity=".07" stroke="#8E75B2" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="7 6"/><rect x="1113" y="118" width="126.7" height="24" rx="12" fill="#8E75B2"/><text x="1176.4" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Google AI Studio</text>
+<rect x="1095" y="330" width="350" height="240" rx="26" fill="#0F9D58" fill-opacity=".07" stroke="#0F9D58" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="7 6"/><rect x="1113" y="318" width="125.1" height="24" rx="12" fill="#0F9D58"/><text x="1175.6" y="334" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Google Workspace</text>
+<rect x="1095" y="620" width="350" height="100" rx="26" fill="#26A5E4" fill-opacity=".07" stroke="#26A5E4" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="7 6"/><rect x="1113" y="608" width="75.6" height="24" rx="12" fill="#26A5E4"/><text x="1150.8" y="624" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0B1220">Telegram</text>
+<path d="M238.0,235.0 C300.0,235.0 313.0,290.0 375.0,290.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.8s" repeatCount="indefinite" path="M238.0,235.0 C300.0,235.0 313.0,290.0 375.0,290.0"/></circle>
+<path d="M238.0,345.0 C300.0,345.0 313.0,290.0 375.0,290.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.8s" repeatCount="indefinite" path="M238.0,345.0 C300.0,345.0 313.0,290.0 375.0,290.0"/></circle>
+<path d="M238.0,455.0 C328.1,455.0 284.9,290.0 375.0,290.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.9s" repeatCount="indefinite" path="M238.0,455.0 C328.1,455.0 284.9,290.0 375.0,290.0"/></circle>
+<path d="M238.0,565.0 C367.0,565.0 246.0,290.0 375.0,290.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="3.2s" repeatCount="indefinite" path="M238.0,565.0 C367.0,565.0 246.0,290.0 375.0,290.0"/></circle>
+<path d="M490.0,319.0 C490.0,359.0 490.0,391.0 490.0,431.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.7s" repeatCount="indefinite" path="M490.0,319.0 C490.0,359.0 490.0,391.0 490.0,431.0"/></circle>
+<path d="M605.0,460.0 C710.3,460.0 599.7,230.0 705.0,230.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="3.0s" repeatCount="indefinite" path="M605.0,460.0 C710.3,460.0 599.7,230.0 705.0,230.0"/></circle>
+<path d="M955.0,230.0 C1041.7,230.0 1073.3,205.0 1160.0,205.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.9s" repeatCount="indefinite" path="M955.0,230.0 C1041.7,230.0 1073.3,205.0 1160.0,205.0"/></circle>
+<path d="M955.0,230.0 C1066.9,230.0 1048.1,400.0 1160.0,400.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="3.1s" repeatCount="indefinite" path="M955.0,230.0 C1066.9,230.0 1048.1,400.0 1160.0,400.0"/></circle>
+<path d="M1160.0,400.0 C1078.5,400.0 1054.0,450.0 972.5,450.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.9s" repeatCount="indefinite" path="M1160.0,400.0 C1078.5,400.0 1054.0,450.0 972.5,450.0"/></circle>
+<path d="M972.5,450.0 C1054.6,450.0 1077.9,505.0 1160.0,505.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="2.9s" repeatCount="indefinite" path="M972.5,450.0 C1054.6,450.0 1077.9,505.0 1160.0,505.0"/></circle>
+<path d="M830.0,479.0 C830.0,559.0 1270.0,561.0 1270.0,641.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="3.6s" repeatCount="indefinite" path="M830.0,479.0 C830.0,559.0 1270.0,561.0 1270.0,641.0"/></circle>
+<path d="M615.0,630.0 C775.0,630.0 1000.0,670.0 1160.0,670.0" fill="none" stroke="#7C8BA1" stroke-width="2.2" stroke-opacity=".9" marker-end="url(#a7C8BA1)"/>
+<circle r="2.6" fill="#7C8BA1"><animateMotion dur="3.8s" repeatCount="indefinite" path="M615.0,630.0 C775.0,630.0 1000.0,670.0 1160.0,670.0"/></circle>
+<g filter="url(#sh)"><rect x="58.0" y="206.0" width="180.0" height="58" rx="18" fill="#162033" stroke="#475569" stroke-width="2"/><circle cx="87.0" cy="235" r="17" fill="#475569"/><g transform="translate(87.0,235)"><rect x="-10" y="-8" width="20" height="16" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-10,-3.2 h20" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-6.8" cy="-5.6" r=".9" fill="#FFFFFF"/><circle cx="-4" cy="-5.6" r=".9" fill="#FFFFFF"/></g></g>
+<text x="114.0" y="233" font-size="13.5" font-weight="700" fill="#F1F5F9">Computrabajo</text>
+<text x="114.0" y="250" font-size="11" fill="#94A3B8">HTML público</text>
+<g filter="url(#sh)"><rect x="58.0" y="316.0" width="180.0" height="58" rx="18" fill="#162033" stroke="#475569" stroke-width="2"/><circle cx="87.0" cy="345" r="17" fill="#475569"/><g transform="translate(87.0,345)"><rect x="-10" y="-8" width="20" height="16" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-10,-3.2 h20" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-6.8" cy="-5.6" r=".9" fill="#FFFFFF"/><circle cx="-4" cy="-5.6" r=".9" fill="#FFFFFF"/></g></g>
+<text x="114.0" y="343" font-size="13.5" font-weight="700" fill="#F1F5F9">Elempleo</text>
+<text x="114.0" y="360" font-size="11" fill="#94A3B8">HTML público</text>
+<g filter="url(#sh)"><rect x="58.0" y="426.0" width="180.0" height="58" rx="18" fill="#162033" stroke="#475569" stroke-width="2"/><circle cx="87.0" cy="455" r="17" fill="#475569"/><g transform="translate(87.0,455)"><rect x="-10" y="-8" width="20" height="16" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-10,-3.2 h20" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-6.8" cy="-5.6" r=".9" fill="#FFFFFF"/><circle cx="-4" cy="-5.6" r=".9" fill="#FFFFFF"/></g></g>
+<text x="114.0" y="453" font-size="13.5" font-weight="700" fill="#F1F5F9">Magneto365</text>
+<text x="114.0" y="470" font-size="11" fill="#94A3B8">HTML público</text>
+<g filter="url(#sh)"><rect x="58.0" y="536.0" width="180.0" height="58" rx="18" fill="#162033" stroke="#475569" stroke-width="2"/><circle cx="87.0" cy="565" r="17" fill="#475569"/><g transform="translate(87.0,565)"><rect x="-10" y="-8" width="20" height="16" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-10,-3.2 h20" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-6.8" cy="-5.6" r=".9" fill="#FFFFFF"/><circle cx="-4" cy="-5.6" r=".9" fill="#FFFFFF"/></g></g>
+<text x="114.0" y="563" font-size="13.5" font-weight="700" fill="#F1F5F9">LinkedIn</text>
+<text x="114.0" y="580" font-size="11" fill="#94A3B8">HTML público</text>
+<g filter="url(#sh)"><rect x="375.0" y="261.0" width="230.0" height="58" rx="18" fill="#162033" stroke="#EA4B71" stroke-width="2"/><circle cx="404.0" cy="290" r="17" fill="#EA4B71"/><g transform="translate(404.0,290)"><circle cx="-2" cy="-2" r="6" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5,2.5 l6,6" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="431.0" y="288" font-size="13.5" font-weight="700" fill="#F1F5F9">Scrapers</text>
+<text x="431.0" y="305" font-size="11" fill="#94A3B8">4 workflows · 9:05 a 9:50</text>
+<g filter="url(#sh)"><rect x="375.0" y="431.0" width="230.0" height="58" rx="18" fill="#162033" stroke="#EA4B71" stroke-width="2"/><circle cx="404.0" cy="460" r="17" fill="#EA4B71"/><g transform="translate(404.0,460)"><path d="M0,-10 l8,3 v5 c0,5 -3.5,8.5 -8,10 c-4.5,-1.5 -8,-5 -8,-10 v-5 z" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,0 l2.2,2.3 l4.2,-4.6" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="431.0" y="458" font-size="13.5" font-weight="700" fill="#F1F5F9">Filtro y dedupe</text>
+<text x="431.0" y="475" font-size="11" fill="#94A3B8">seniority · rubro · zona</text>
+<g filter="url(#sh)"><rect x="705.0" y="201.0" width="250.0" height="58" rx="18" fill="#162033" stroke="#EA4B71" stroke-width="2"/><circle cx="734.0" cy="230" r="17" fill="#EA4B71"/><g transform="translate(734.0,230)"><circle r="9" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-4.2,0.2 l2.8,3 l5.6,-6.2" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="761.0" y="228" font-size="13.5" font-weight="700" fill="#F1F5F9">Match con IA</text>
+<text x="761.0" y="245" font-size="11" fill="#94A3B8">lotes de 8 · top 5 con ≥ 90 %</text>
+<g filter="url(#sh)"><rect x="687.5" y="421.0" width="285.0" height="58" rx="18" fill="#162033" stroke="#EA4B71" stroke-width="2"/><circle cx="716.5" cy="450" r="17" fill="#EA4B71"/><g transform="translate(716.5,450)"><path d="M-6,-9.5 h8 l5,5 v14 h-13 z M2,-9.5 v5 h5" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3,1 h7 M-3,4.5 h7" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="743.5" y="448" font-size="13.5" font-weight="700" fill="#F1F5F9">HV adaptada</text>
+<text x="743.5" y="465" font-size="11" fill="#94A3B8">redacta con Gemini · anti-alucinación</text>
+<g filter="url(#sh)"><rect x="365.0" y="601.0" width="250.0" height="58" rx="18" fill="#162033" stroke="#EA4B71" stroke-width="2"/><circle cx="394.0" cy="630" r="17" fill="#EA4B71"/><g transform="translate(394.0,630)"><path d="M-9,9 h18 M-6,9 v-7 M-1,9 v-13 M4,9 v-9" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="421.0" y="628" font-size="13.5" font-weight="700" fill="#F1F5F9">Resumen y métricas</text>
+<text x="421.0" y="645" font-size="11" fill="#94A3B8">diario 11:45 · viernes 11:52</text>
+<g filter="url(#sh)"><rect x="1160.0" y="176.0" width="220.0" height="58" rx="18" fill="#162033" stroke="#8E75B2" stroke-width="2"/><circle cx="1189.0" cy="205" r="17" fill="#8E75B2"/><g transform="translate(1189.0,205)"><path d="M2,-10 l-8,11 h6 l-2,9 l8,-11 h-6 z" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="1216.0" y="203" font-size="13.5" font-weight="700" fill="#F1F5F9">Gemini API</text>
+<text x="1216.0" y="220" font-size="11" fill="#94A3B8">compatible con OpenAI</text>
+<g filter="url(#sh)"><rect x="1160.0" y="371.0" width="220.0" height="58" rx="18" fill="#162033" stroke="#0F9D58" stroke-width="2"/><circle cx="1189.0" cy="400" r="17" fill="#0F9D58"/><g transform="translate(1189.0,400)"><rect x="-10" y="-8" width="20" height="16" rx="2.5" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-10,-2.5 h20 M-10,2.8 h20 M-3.3,-8 v16" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="1216.0" y="398" font-size="13.5" font-weight="700" fill="#F1F5F9">Google Sheet</text>
+<text x="1216.0" y="415" font-size="11" fill="#94A3B8">CRM de ofertas</text>
+<g filter="url(#sh)"><rect x="1160.0" y="476.0" width="220.0" height="58" rx="18" fill="#162033" stroke="#4285F4" stroke-width="2"/><circle cx="1189.0" cy="505" r="17" fill="#4285F4"/><g transform="translate(1189.0,505)"><path d="M-6,-9.5 h8 l5,5 v14 h-13 z M2,-9.5 v5 h5" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3,1 h7 M-3,4.5 h7" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="1216.0" y="503" font-size="13.5" font-weight="700" fill="#F1F5F9">Google Docs</text>
+<text x="1216.0" y="520" font-size="11" fill="#94A3B8">HV por oferta</text>
+<g filter="url(#sh)"><rect x="1160.0" y="641.0" width="220.0" height="58" rx="18" fill="#162033" stroke="#26A5E4" stroke-width="2"/><circle cx="1189.0" cy="670" r="17" fill="#26A5E4"/><g transform="translate(1189.0,670)"><path d="M-9,-7 h18 v11 h-11 l-5,4 v-4 h-2 z" fill="none" stroke="#0B1220" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+<text x="1216.0" y="668" font-size="13.5" font-weight="700" fill="#F1F5F9">Bot de Telegram</text>
+<text x="1216.0" y="685" font-size="11" fill="#94A3B8">avisos al celular</text>
+<rect x="443.0" y="365.0" width="93.9" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="490.0" y="378.8" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">ofertas nuevas</text>
+<rect x="619.5" y="352.2" width="71.7" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="655.3" y="366.0" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">candidatos</text>
+<rect x="1007.0" y="207.5" width="100.9" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="1057.5" y="221.3" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">califica vs. HV</text>
+<rect x="985.2" y="279.8" width="116.2" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="1043.3" y="293.6" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">guarda las mejores</text>
+<rect x="1015.8" y="411.3" width="116.9" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="1074.2" y="425.1" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">generar = auto o X</text>
+<rect x="1018.9" y="471.6" width="110.6" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="1074.2" y="485.4" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">crea el documento</text>
+<rect x="1019.0" y="550.0" width="62.0" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="1050.0" y="563.8" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">HV lista</text>
+<rect x="780.1" y="634.1" width="99.5" height="20" rx="10" fill="#0F172A" stroke="#7C8BA1" stroke-opacity=".7"/><text x="829.9" y="647.9" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E2E8F0">resumen del día</text>
+<path d="M36,790 h30" stroke="#7C8BA1" stroke-width="2.2"/><circle cx="51" cy="790" r="2.6" fill="#7C8BA1"/>
+<text x="74" y="794" font-size="11.5" fill="#94A3B8">Flujo de datos / petición</text>
+<path d="M257.18,790 h30" stroke="#7C8BA1" stroke-width="2.2" stroke-dasharray="6 5"/>
+<text x="295.18" y="794" font-size="11.5" fill="#94A3B8">Despliegue, tarea programada o proceso asíncrono</text>
+<rect x="618.5450000000001" y="781" width="30" height="18" rx="9" fill="#64748B" fill-opacity=".15" stroke="#64748B" stroke-dasharray="4 3"/>
+<text x="656.5450000000001" y="794" font-size="11.5" fill="#94A3B8">Plataforma o entorno donde corre</text>
+</svg>
