@@ -20,7 +20,7 @@ sistema y qué protege. Para la instalación y el despliegue vuelve al [README](
 
 Cada mañana de lunes a viernes, el sistema revisa cuatro portales de empleo, descarta lo que no
 encaja, pide a una IA (Gemini) que califique cada oferta contra tu hoja de vida (HV) y se queda con
-las 5 mejores de cada portal con **match ≥ 90 %**. Para ellas genera una HV adaptada (sin inventar
+las 5 mejores de cada portal con **match ≥ 83 %** (filtrando que la oferta tenga máximo 3 días de publicación y salario ≥ $3.000.000 COP o no especificado). Para ellas genera una HV adaptada (sin inventar
 experiencia) en Google Docs y PDF, y te avisa por Telegram.
 
 ![Arquitectura](arquitectura.svg)

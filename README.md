@@ -39,8 +39,8 @@ Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scra
 ### Qué hace
 
 - **Recolecta** ofertas nuevas de cuatro portales de empleo, buscando por los perfiles y keywords que definas en el `.env` (`PERFILES_BUSQUEDA`).
-- **Filtra** automáticamente por seniority, rubro y zona antes de gastar IA.
-- **Evalúa con IA (Gemini)** cada oferta nueva contra tu HV, por lotes de 8 ofertas por llamada, y **guarda solo las 5 mejores de cada fuente con match ≥ 90%**. Las descartadas se recuerdan 21 días para no volver a evaluarlas.
+- **Filtra** automáticamente por antigüedad (máximo 3 días de publicación), salario (≥ $3.000.000 COP o no especificado/a convenir), seniority, rubro y zona antes de gastar IA.
+- **Evalúa con IA (Gemini)** cada oferta nueva contra tu HV, por lotes de 8 ofertas por llamada, y **guarda solo las 5 mejores de cada fuente con match ≥ 83%**. Las descartadas se recuerdan 21 días para no volver a evaluarlas.
 - **Guarda** las elegidas en una Google Sheet que funciona como CRM personal.
 - **Genera la HV adaptada** automáticamente para esas ofertas, en **Google Docs y en PDF** (`HV_<Nombre>_<Oferta>`), lista para subir a los portales, que no aceptan Google Docs. Reglas fijas:
   - no inventa experiencia, empresas, títulos ni certificaciones;
@@ -88,7 +88,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 9:00
 ├── workflows/
 │   ├── job(s)-<portal>.json         # un workflow por portal: recolección + match IA
 │   ├── generar-hv-adaptada.json     # HV adaptada por IA + Google Doc + PDF + chequeo anti-alucinación
-│   ├── resumen-diario-telegram.json # resumen diario de ofertas con match >= 90%
+│   ├── resumen-diario-telegram.json # resumen diario de ofertas con match >= 83%
 │   ├── metricas-semanales.json      # embudo de conversión, viernes
 │   └── limpieza-drive-hv.json       # viernes: HV (Doc y PDF) con más de 15 días a la papelera
 ├── docs/                    # diagrama de arquitectura y badge del horario
@@ -141,7 +141,7 @@ El sistema corre solo; tu trabajo diario ocurre en la planilla y en Telegram.
 ### 5.1 Revisar las ofertas del día
 
 1. A partir de las 10:00, abre la Google Sheet: cada fila es una oferta con
-   **match ≥ 90%**, con su `fuente`, `titulo`, `empresa`, `ubicacion`, `url`,
+   **match ≥ 83%**, con su `fuente`, `titulo`, `empresa`, `ubicacion`, `url`,
    `match_pct`, `ats_tip` y `perfil_sugerido`.
 2. A medida que se generan las HV, llegan avisos por Telegram con botones al PDF
    (`hv_pdf`), al Google Doc (`hv_adaptada`) y a la oferta.
@@ -172,7 +172,7 @@ de los viernes mide el embudo: alto match → postulación → entrevista.
 
 ### 5.6 Resúmenes por Telegram
 
-- **11:45:** resumen diario de las ofertas con match ≥ 90%, con enlaces a la HV en PDF y en Google Docs.
+- **11:45:** resumen diario de las ofertas con match ≥ 83%, con enlaces a la HV en PDF y en Google Docs.
 - **11:52, solo viernes:** métricas semanales del embudo.
 
 ---
@@ -207,7 +207,7 @@ fuente | titulo | empresa | ubicacion | url | keyword_busqueda | fecha_deteccion
    | `ZONA_REGEX`, `EXCLUIR_PUESTO_REGEX`, `EXCLUIR_RUBRO_REGEX` | qué ubicaciones aceptar y qué puestos/rubros descartar |
    | `COMPUTRABAJO_DOMINIO`, `UBICACION_*` | dominio y ubicación de cada portal |
 
-3. **Criterios fijos**: `umbral_match` (90), `max_ofertas` (5) y `max_candidatos` (30) están en el nodo `Config (perfiles + criterios)` de cada scraper.
+3. **Criterios fijos**: `umbral_match` (83), `max_ofertas` (5) y `max_candidatos` (30) están en el nodo `Config (perfiles + criterios)` de cada scraper. Se filtran automáticamente publicaciones de más de 3 días y salarios explícitos menores a $3.000.000 COP.
 
 ### Cómo ejecutarlo
 
