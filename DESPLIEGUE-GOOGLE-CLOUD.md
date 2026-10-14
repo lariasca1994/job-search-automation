@@ -149,19 +149,18 @@ n8n te pide crear la cuenta owner: **guarda esa contraseña**.
    docker compose restart n8n
    ```
 
-## Actualizar un despliegue
+## Despliegue continuo automático
 
+El despliegue está 100% automatizado y no requiere intervención manual:
+
+1. **Al encenderse la VM (9:00 AM L-V):** El metadato `startup-script` de Compute Engine ejecuta `/usr/local/bin/actualizar-n8n.sh`, que hace `git pull origin main`, levanta Docker, importa y publica los 8 workflows en n8n y reinicia el servicio.
+2. **Durante la ventana de ejecución (9:00 a 12:00):** Un cron job (`/etc/cron.d/jobsearch-autoupdate`) verifica GitHub cada 5 minutos. Si hay nuevos commits en `main`, sincroniza y recarga n8n en caliente.
+3. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida la integridad y sintaxis JSON de todos los workflows en cada push.
+
+Para forzar una actualización manual en cualquier momento:
 ```bash
-cd ~/job-search-automation
-git pull
-nano .env                      # si agregaste o cambiaste variables
-docker compose up -d           # recrea el contenedor si cambió el .env o la imagen
-docker exec -u node n8n n8n import:workflow --separate --input=/workflows
-docker compose restart n8n
+sudo /usr/local/bin/actualizar-n8n.sh
 ```
-
-Al importar, cada workflow reemplaza al que tiene el mismo ID, así que no se
-duplican.
 
 ## Probar un workflow a mano
 

@@ -1,0 +1,39 @@
+name: CI y Validación de Workflows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validar-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validar sintaxis e integridad JSON de los workflows
+        run: |
+          python -c "
+          import json, glob, sys
+          files = glob.glob('workflows/*.json')
+          assert len(files) >= 6, f'Faltan archivos de workflows: solo hay {len(files)}'
+          for f in files:
+              try:
+                  with open(f, 'r', encoding='utf-8') as fp:
+                      data = json.load(fp)
+                      assert 'nodes' in data, f'{f} no tiene clave nodes'
+                      assert 'connections' in data, f'{f} no tiene clave connections'
+                      print(f'OK: {f} es JSON valido ({len(data[\"nodes\"])} nodos)')
+              except Exception as e:
+                  print(f'ERROR en {f}: {e}', file=sys.stderr)
+                  sys.exit(1)
+          print('Todos los workflows validados exitosamente.')
+          "
