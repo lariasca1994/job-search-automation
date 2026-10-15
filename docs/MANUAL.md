@@ -8,15 +8,18 @@ sistema y qué protege. Para la instalación y el despliegue vuelve al [README](
 
 ## Contenido
 
-1. [En pocas palabras](#1-en-pocas-palabras)
-2. [Paso a paso](#2-paso-a-paso)
-3. [Qué información se maneja y dónde queda](#3-qué-información-se-maneja-y-dónde-queda)
-4. [Seguridad: qué se garantiza](#4-seguridad-qué-se-garantiza)
-5. [Límites y recomendaciones](#5-límites-y-recomendaciones)
+1. [Proyecto: objetivos y alcances](#1-proyecto-objetivos-y-alcances)
+2. [Glosario](#2-glosario)
+3. [Plataformas, base de datos y servicios](#3-plataformas-base-de-datos-y-servicios)
+4. [Paso a paso](#4-paso-a-paso)
+5. [Seguridad: tu información protegida](#5-seguridad-tu-información-protegida)
+6. [Agradecimientos](#6-agradecimientos)
 
 ---
 
-## 1. En pocas palabras
+## 1. Proyecto: objetivos y alcances
+
+### Objetivo
 
 Cada mañana de lunes a viernes, el sistema revisa cuatro portales de empleo, descarta lo que no
 encaja, pide a una IA (Gemini) que califique cada oferta contra tu hoja de vida (HV) y se queda con
@@ -25,9 +28,51 @@ experiencia) en Google Docs y PDF, y te avisa por Telegram.
 
 ![Arquitectura](arquitectura.svg)
 
-## 2. Paso a paso
+### Límites
 
-### 2.1 La planilla (Google Sheet)
+- **Tu HV se envía a un proveedor de IA (Google Gemini)** en cada evaluación: no incluyas datos que
+  no pondrías en una postulación (documento de identidad, dirección exacta).
+- En el **nivel gratuito** de la API de Gemini, los términos de Google permiten usar lo que envías
+  (tu HV y las ofertas) para mejorar sus productos. Si no quieres eso, usa una key de un proyecto
+  con facturación (nivel de pago).
+- Entra a n8n solo por el túnel SSH del despliegue (`localhost:5678`); no abras ese puerto a internet.
+- Revisa siempre la HV adaptada antes de enviarla.
+
+## 2. Glosario
+
+Palabras técnicas que aparecen en este manual, explicadas en lenguaje simple.
+
+| Término | Qué significa |
+|---|---|
+| **API** | Puerta de entrada de un programa para que otros programas le pidan o le envíen datos. |
+| **Base de datos** | Lugar donde la aplicación guarda la información de forma ordenada y permanente. |
+| **Despliegue** | Publicar una nueva versión de la aplicación para que esté disponible en internet. |
+| **Métricas** | Medidas de un equipo como uso de CPU, memoria, disco o red. |
+| **Navegador** | Programa con el que abres páginas web: Chrome, Edge, Firefox, Safari. |
+| **Nube** | Servidores de una empresa (Amazon, Microsoft, Google, Oracle…) donde la aplicación funciona sin depender de un computador propio. |
+| **PDF** | Formato de documento que se ve igual en cualquier equipo. |
+| **Servidor** | Computador en la nube que atiende las peticiones de la aplicación. |
+| **Token** | Credencial temporal que la aplicación te entrega al iniciar sesión, en lugar de enviar tu contraseña en cada paso. |
+| **Variables de entorno / secretos** | Claves y contraseñas internas de la aplicación, guardadas fuera del código para que no queden expuestas. |
+
+## 3. Plataformas, base de datos y servicios
+
+Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cada uno.
+
+| Plataforma | Tipo | Qué hace en el proyecto |
+|---|---|---|
+| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Nube | Una VM con Docker corre n8n; una política de horario la enciende a las 9:00 y la apaga a las 12:00, de lunes a viernes. |
+| ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white) | Automatización | Orquesta los workflows: recolección, filtro, evaluación con IA, HV adaptada, resumen y métricas. |
+| ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) | Contenedores | Empaqueta n8n con `docker-compose.yml`, igual en local y en la VM. |
+| ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white) | API / servicio externo (IA) | Califica el % de compatibilidad de cada oferta y redacta la HV adaptada. |
+| ![Google Sheets](https://img.shields.io/badge/Google_Sheets-34A853?style=for-the-badge&logo=googlesheets&logoColor=white) | API / servicio externo | Funciona como CRM: guarda las ofertas elegidas y coordina los workflows. |
+| ![Google Docs](https://img.shields.io/badge/Google_Docs-4285F4?style=for-the-badge&logo=googledocs&logoColor=white) | API / servicio externo | Guarda cada HV adaptada con formato real y enlaces clicables. |
+| ![Google Drive](https://img.shields.io/badge/Google_Drive-0F9D58?style=for-the-badge&logo=googledrive&logoColor=white) | API / servicio externo | Guarda Doc y PDF de cada HV en la carpeta `HV`, y los viernes manda a la papelera los de más de 15 días. |
+| ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) | API / servicio externo | Avisa cada HV lista y envía el resumen del día y las métricas semanales. |
+
+## 4. Paso a paso
+
+### 4.1 La planilla (Google Sheet)
 
 Cada fila es una oferta elegida:
 
@@ -44,7 +89,7 @@ Cada fila es una oferta elegida:
 | `posible_alucinacion` | Términos de la HV generada que no están en tu HV base, o `FALTAN ENLACES` | Revísalo antes de enviar |
 | `fecha_postulacion`, `estado` | Tu seguimiento | Sí |
 
-### 2.2 Rutina diaria (hora local)
+### 4.2 Rutina diaria (hora local)
 
 | Hora | Qué pasa |
 |---|---|
@@ -54,14 +99,18 @@ Cada fila es una oferta elegida:
 | 11:45 | Resumen diario por Telegram |
 | 11:52 (viernes) | Métricas semanales del embudo |
 
-### 2.3 Antes de postularte
+### 4.3 Antes de postularte
 
 1. Abre el Google Doc de la oferta.
 2. Revisa `posible_alucinacion` y corrige lo que no sea cierto.
 3. Sube el **PDF**. Si corregiste el Doc, descarga un PDF nuevo (*Archivo → Descargar → PDF*).
 4. Actualiza `fecha_postulacion` y `estado`.
 
-## 3. Qué información se maneja y dónde queda
+## 5. Seguridad: tu información protegida
+
+Tu confianza es lo primero: la plataforma solo pide los datos necesarios para funcionar, los protege y no los comparte con terceros. Esto es lo que se guarda y cómo se protege.
+
+### Qué datos se guardan y dónde
 
 | Dato | Para qué se usa | Dónde queda |
 |---|---|---|
@@ -70,7 +119,7 @@ Cada fila es una oferta elegida:
 | HV adaptadas (Doc y PDF) | Postularte | Carpeta `HV` de tu Drive; se borran a los 15 días (recuperables 30 días en la papelera) |
 | Credenciales (Gemini, Google OAuth2, Telegram) | Conectar los servicios | `.env` y credenciales de n8n en la VM; nunca en el repositorio |
 
-## 4. Seguridad: qué se garantiza
+### Cómo se protege tu información
 
 - **Todo corre en tu infraestructura:** n8n self-hosted en tu VM de Google Cloud; no hay un
   servidor compartido con otras personas.
@@ -82,12 +131,8 @@ Cada fila es una oferta elegida:
 - **Retención limitada** de las HV generadas en el Drive (15 días).
 - **VM encendida solo 3 horas al día** (9:00 a 12:00), lo que reduce su exposición.
 
-## 5. Límites y recomendaciones
+## 6. Agradecimientos
 
-- **Tu HV se envía a un proveedor de IA (Google Gemini)** en cada evaluación: no incluyas datos que
-  no pondrías en una postulación (documento de identidad, dirección exacta).
-- En el **nivel gratuito** de la API de Gemini, los términos de Google permiten usar lo que envías
-  (tu HV y las ofertas) para mejorar sus productos. Si no quieres eso, usa una key de un proyecto
-  con facturación (nivel de pago).
-- Entra a n8n solo por el túnel SSH del despliegue (`localhost:5678`); no abras ese puerto a internet.
-- Revisa siempre la HV adaptada antes de enviarla.
+A mi familia, por su apoyo incondicional, su paciencia y por creer en cada proyecto incluso cuando apenas era una idea. Este trabajo también es de ustedes.
+
+Y a ti, que usas esta plataforma: cada prueba, comentario y sugerencia ayuda a que siga mejorando.
