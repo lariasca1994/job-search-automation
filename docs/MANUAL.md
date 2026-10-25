@@ -32,9 +32,8 @@ experiencia) en Google Docs y PDF, y te avisa por Telegram.
 
 - **Tu HV se envía a un proveedor de IA (Google Gemini)** en cada evaluación: no incluyas datos que
   no pondrías en una postulación (documento de identidad, dirección exacta).
-- En el **nivel gratuito** de la API de Gemini, los términos de Google permiten usar lo que envías
-  (tu HV y las ofertas) para mejorar sus productos. Si no quieres eso, usa una key de un proyecto
-  con facturación (nivel de pago).
+- Según el tipo de cuenta, los términos de Google para la API de Gemini pueden permitir usar lo que
+  envías (tu HV y las ofertas) para mejorar sus productos: revísalos antes de usar tu propia key.
 - Entra a n8n solo por el túnel SSH del despliegue (`localhost:5678`); no abras ese puerto a internet.
 - Revisa siempre la HV adaptada antes de enviarla.
 
