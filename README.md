@@ -95,7 +95,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 9:00
 │   ├── metricas-semanales.json      # embudo de conversión, viernes
 │   └── limpieza-drive-hv.json       # viernes: HV (Doc y PDF) con más de 15 días a la papelera
 ├── infra/                   # sincronización de la VM con GitHub (arranque, script y cron)
-├── .github/workflows/       # CI de los workflows y aviso semanal de versión nueva de n8n
+├── .github/workflows/       # CI, actualización diaria de n8n y depuración quincenal
 ├── docs/                    # diagrama de arquitectura y badge del horario
 ├── DESPLIEGUE-GOOGLE-CLOUD.md
 └── README.md

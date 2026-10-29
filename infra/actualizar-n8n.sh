@@ -63,6 +63,9 @@ docker compose up -d
 for _ in $(seq 1 60); do
   if curl -fsS http://127.0.0.1:5678/healthz > /dev/null 2>&1; then
     echo "$actual" > "$ESTADO"
+    # Limpieza: imágenes y contenedores que ya no usa nadie (versiones viejas de n8n)
+    docker container prune -f > /dev/null
+    docker image prune -af > /dev/null
     echo "=== n8n $(docker exec n8n n8n --version) listo con $(git rev-parse --short HEAD)"
     exit 0
   fi

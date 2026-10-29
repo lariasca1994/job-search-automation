@@ -180,6 +180,16 @@ VM está en [`infra/`](infra/):
 La importación nunca corre con n8n encendido: n8n guarda todo en SQLite y dos procesos
 escribiendo a la vez bloquean la base.
 
+### Limpieza (cada 15 días y en cada actualización)
+
+| Dónde | Qué se borra | Quién lo hace |
+|---|---|---|
+| VM | Imágenes y contenedores de Docker que ya no se usan (versiones viejas de n8n) | `infra/actualizar-n8n.sh`, después de cada actualización exitosa |
+| VM | Historial de ejecuciones de n8n con más de 15 días | n8n (`EXECUTIONS_DATA_MAX_AGE` en `docker-compose.yml`) |
+| VM | Registros del contenedor (máximo 3 archivos de 10 MB) | Docker (`logging` en `docker-compose.yml`) |
+| GitHub | Ejecuciones de workflows y cachés de más de 15 días | `.github/workflows/depuracion.yml`, los días 1 y 16 |
+| Drive | HV con más de 15 días (a la papelera) | Workflow *Limpieza Drive HV*, los viernes |
+
 Para forzar una actualización manual en cualquier momento:
 ```bash
 sudo /usr/local/bin/actualizar-n8n.sh

@@ -1,0 +1,35 @@
+name: Depuración quincenal
+
+# Cada 15 días (días 1 y 16 de cada mes) borra de GitHub Actions lo que ya no sirve:
+#   - ejecuciones de workflows de más de 15 días (con sus registros);
+#   - cachés sin usar en 15 días.
+# En la VM, la limpieza la hacen infra/actualizar-n8n.sh (imágenes viejas) y n8n
+# (ejecuciones de más de 15 días). Corre con el token del propio repositorio.
+on:
+  schedule:
+    - cron: '0 6 1,16 * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  depurar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecuciones y cachés de más de 15 días
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          limite=$(date -u -d '15 days ago' +%s)
+          gh api --paginate "repos/$REPO/actions/runs?per_page=100&created=<$(date -u -d '15 days ago' +%F)" \
+            --jq '.workflow_runs[] | select(.status == "completed") | .id' | while read -r id; do
+            gh api -X DELETE "repos/$REPO/actions/runs/$id" > /dev/null && echo "ejecución $id borrada"
+          done
+          gh api --paginate "repos/$REPO/actions/caches?per_page=100" \
+            --jq '.actions_caches[] | "\(.id) \(.last_accessed_at)"' | while read -r id fecha; do
+            if [ "$(date -u -d "$fecha" +%s)" -lt "$limite" ]; then
+              gh api -X DELETE "repos/$REPO/actions/caches/$id" > /dev/null && echo "caché $id borrada"
+            fi
+          done

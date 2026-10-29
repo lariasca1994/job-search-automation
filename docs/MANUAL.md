@@ -142,7 +142,8 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
 - **Sin inventar datos:** el nombre y la línea de contacto se copian textuales de tu HV base; la IA
   no puede inventar experiencia, empresas, títulos ni certificaciones, y el chequeo
   anti-alucinación marca cualquier término nuevo.
-- **Retención limitada** de las HV generadas en el Drive (15 días).
+- **Retención limitada:** las HV generadas en el Drive y el historial de ejecuciones se
+  borran a los 15 días.
 - **Al día en seguridad:** n8n se mantiene solo en su última versión estable: cada día hábil
   se revisa si salió una nueva y, si es así, se aplica automáticamente antes de que la VM
   se encienda.

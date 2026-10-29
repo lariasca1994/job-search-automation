@@ -8,6 +8,12 @@ services:
     # el DNS interno). Con DNS publicos forzados hubo fallos intermitentes (EAI_AGAIN).
     container_name: n8n
     restart: unless-stopped
+    # Registros del contenedor acotados: el disco de la VM es pequeno
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       # Solo en localhost: al editor se entra por tunel SSH (ver DESPLIEGUE-GOOGLE-CLOUD.md),
       # nunca expuesto directo a internet.
@@ -33,6 +39,10 @@ services:
       # En la e2-micro el ejecutor de los nodos Code puede tardar mas de los 30 s por
       # defecto en conectarse al arrancar; con poco margen, los nodos Code fallan.
       - N8N_RUNNERS_GRANT_TOKEN_TTL=120
+
+      # Depuracion de 15 dias: n8n borra el historial de ejecuciones mas antiguo
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=360
 
       # Nodos que estos workflows no usan y que ejecutan comandos, leen archivos del
       # servidor o corren codigo fuera del aislamiento del nodo Code: n8n ni los carga.
