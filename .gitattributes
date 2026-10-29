@@ -1,0 +1,3 @@
+# Los scripts y el cron corren en Linux: siempre con fin de línea LF
+*.sh text eol=lf
+infra/*.cron text eol=lf

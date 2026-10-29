@@ -7,17 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validar-workflows:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Validar sintaxis e integridad JSON de los workflows
         run: |
@@ -37,3 +40,25 @@ jobs:
                   sys.exit(1)
           print('Todos los workflows validados exitosamente.')
           "
+
+      # Los mismos nodos que NODES_EXCLUDE deja fuera en docker-compose.yml: un workflow
+      # que los use no funcionaria en la VM, asi que se detiene aqui.
+      - name: Sin nodos excluidos
+        run: |
+          python -c "
+          import json, glob, re, sys
+          compose = open('docker-compose.yml', encoding='utf-8').read()
+          excluidos = set(json.loads(re.search(r'NODES_EXCLUDE=(\[.*?\])', compose).group(1)))
+          errores = [f'{f}: nodo {n[\"name\"]} ({n[\"type\"]})'
+                     for f in glob.glob('workflows/*.json')
+                     for n in json.load(open(f, encoding='utf-8'))['nodes']
+                     if n['type'] in excluidos]
+          print('\n'.join(errores) or 'Ningun workflow usa nodos excluidos.')
+          sys.exit(1 if errores else 0)
+          "
+
+      - name: Validar docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Validar scripts de la VM
+        run: shellcheck infra/*.sh

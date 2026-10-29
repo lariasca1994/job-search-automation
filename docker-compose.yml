@@ -31,6 +31,10 @@ services:
       # muchas ofertas.
       - N8N_RUNNERS_TASK_TIMEOUT=900
 
+      # Nodos que estos workflows no usan y que ejecutan comandos, leen archivos del
+      # servidor o corren codigo fuera del aislamiento del nodo Code: n8n ni los carga.
+      - 'NODES_EXCLUDE=["n8n-nodes-base.executeCommand","n8n-nodes-base.localFileTrigger","n8n-nodes-base.readWriteFile","n8n-nodes-base.ssh","n8n-nodes-base.function","n8n-nodes-base.functionItem","@n8n/n8n-nodes-langchain.code"]'
+
       # --- Secretos (ver .env.example)
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.8-flash}

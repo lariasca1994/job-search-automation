@@ -1,0 +1,40 @@
+# Cada lunes compara la versión de n8n fijada en docker-compose.yml con la estable oficial.
+# Si hay una más nueva, abre un issue (llega por correo) para actualizarla tras revisar sus
+# notas de versión. No usa Dependabot porque propondría las versiones beta de n8n.
+name: Versión de n8n
+
+on:
+  schedule:
+    - cron: '0 13 * * 1' # lunes 8:00 hora Bogotá (UTC-5)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Comparar con la versión estable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          fijada=$(grep -oE 'n8nio/n8n:[0-9.]+' docker-compose.yml | cut -d: -f2)
+          estable=$(npm view n8n dist-tags.stable)
+          echo "Fijada: $fijada · estable: $estable"
+          if [ "$(printf '%s\n%s\n' "$fijada" "$estable" | sort -V | tail -1)" = "$fijada" ]; then
+            echo "n8n está en la última versión estable."
+            exit 0
+          fi
+          titulo="Actualizar n8n a $estable"
+          if gh issue list --state open --search "in:title \"$titulo\"" --json number --jq 'length' | grep -qx 0; then
+            gh issue create --title "$titulo" --body "La versión fijada en \`docker-compose.yml\` es **$fijada** y la estable oficial es **$estable**.
+
+          1. Revisa las notas de versión y los avisos de seguridad de n8n.
+          2. Cambia la etiqueta de la imagen en \`docker-compose.yml\` y la versión en el README.
+          3. Haz push a \`main\`: la VM la aplica sola en su siguiente sincronización."
+          fi

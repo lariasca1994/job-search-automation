@@ -46,14 +46,14 @@ túnel SSH (paso 6), y n8n solo escucha en `localhost` dentro de la VM.
 ## 2. Horario de encendido y apagado (L-V, 9:00 a 12:00)
 
 ```bash
-gcloud compute resource-policies create instance-schedule horario-vm \
+gcloud compute resource-policies create instance-schedule n8n-horario \
   --region=$REGION \
   --vm-start-schedule="0 9 * * 1-5" \
   --vm-stop-schedule="0 12 * * 1-5" \
   --timezone=$ZONA_HORARIA
 
 gcloud compute instances add-resource-policies $VM \
-  --zone=$ZONE --resource-policies=horario-vm
+  --zone=$ZONE --resource-policies=n8n-horario
 ```
 
 La cuenta de servicio de Compute Engine necesita el rol
@@ -97,10 +97,20 @@ cd job-search-automation
 cp .env.example .env
 nano .env        # completa todas las variables (ver README → Configuración)
 chmod 600 .env
-docker compose up -d
+sudo bash infra/actualizar-n8n.sh
+exit
 ```
 
 Si tu repo es privado, `git clone` te pedirá un token de acceso de GitHub.
+
+La primera ejecución de `infra/actualizar-n8n.sh` levanta n8n, importa y publica los
+workflows, e instala la sincronización con GitHub (ver *Despliegue continuo automático*).
+Falta indicarle a la VM que la ejecute al encenderse (desde tu PC):
+
+```bash
+gcloud compute instances add-metadata $VM --zone=$ZONE \
+  --metadata=startup-script=/usr/local/bin/actualizar-n8n.sh
+```
 
 ## 5. Google: APIs y OAuth
 
@@ -140,22 +150,34 @@ n8n te pide crear la cuenta owner: **guarda esa contraseña**.
 
    Pulsa *Sign in with Google* en cada una. Si Google muestra "app no
    verificada": *Configuración avanzada → Ir a la app*, marca todos los permisos.
-2. Importa y activa los workflows (en la VM):
+2. Vuelve a importar y activar los workflows, ya con las credenciales (en la VM):
    ```bash
-   docker exec -u node n8n n8n import:workflow --separate --input=/workflows
-   for id in $(docker exec -u node n8n n8n list:workflow --onlyId); do
-     docker exec -u node n8n n8n publish:workflow --id=$id
-   done
-   docker compose restart n8n
+   sudo rm -f /var/lib/jobsearch/ultimo-commit
+   sudo /usr/local/bin/actualizar-n8n.sh
    ```
+   No uses `docker exec ... import:workflow` con n8n encendido: bloquea su base de datos.
 
 ## Despliegue continuo automático
 
-El despliegue está 100% automatizado y no requiere intervención manual:
+El despliegue está 100% automatizado y se alimenta solo de `main`. Todo lo que corre en la
+VM está en [`infra/`](infra/):
 
-1. **Al encenderse la VM (9:00 AM L-V):** El metadato `startup-script` de Compute Engine ejecuta `/usr/local/bin/actualizar-n8n.sh`, que hace `git pull origin main`, levanta Docker, importa y publica los 8 workflows en n8n y reinicia el servicio.
-2. **Durante la ventana de ejecución (9:00 a 12:00):** Un cron job (`/etc/cron.d/jobsearch-autoupdate`) verifica GitHub cada 5 minutos. Si hay nuevos commits en `main`, sincroniza y recarga n8n en caliente.
-3. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida la integridad y sintaxis JSON de todos los workflows en cada push.
+| Archivo | Se instala como | Qué hace |
+|---|---|---|
+| `infra/arranque.sh` | `/usr/local/bin/actualizar-n8n.sh` | Trae `main` (`git fetch` + `reset`) y pasa el control al script siguiente. Evita dos sincronizaciones a la vez. |
+| `infra/actualizar-n8n.sh` | — (corre desde el repo) | Reinstala el arranque y el cron si cambiaron. Si cambió algo en `workflows/` o en `docker-compose.yml`, detiene n8n, importa y publica los workflows en un contenedor aparte y vuelve a levantarlo. Si no, no toca n8n. |
+| `infra/jobsearch-autoupdate.cron` | `/etc/cron.d/jobsearch-autoupdate` | Ejecuta la sincronización cada 5 minutos mientras la VM está encendida. |
+
+1. **Al encenderse la VM (9:00 AM L-V):** el metadato `startup-script` ejecuta la sincronización.
+2. **Mientras está encendida:** el cron la repite cada 5 minutos. Un push a `main` llega a la VM en
+   menos de 5 minutos, y uno que solo cambia documentación no reinicia n8n.
+3. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida en cada push la sintaxis
+   de los workflows, que no usen nodos excluidos, el `docker-compose.yml` y los scripts de
+   `infra/`. Cada lunes, `.github/workflows/version-n8n.yml` abre un issue si hay una versión
+   estable de n8n más nueva que la fijada.
+
+La importación nunca corre con n8n encendido: n8n guarda todo en SQLite y dos procesos
+escribiendo a la vez bloquean la base.
 
 Para forzar una actualización manual en cualquier momento:
 ```bash

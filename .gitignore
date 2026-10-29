@@ -4,4 +4,5 @@ node_modules/
 .DS_Store
 *.log
 cbs_errores.txt
-*.md
+CLAUDE.md
+CLAUDE.local.md
