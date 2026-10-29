@@ -75,7 +75,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 9:00
 - [Gemini API](https://aistudio.google.com/apikey) (Google AI Studio, nivel gratuito), por su endpoint compatible con OpenAI. Si `gemini-3.8-flash` se queda sin cuota o está saturado, los workflows pasan solos a `gemini-flash-lite-latest` y luego a `gemini-3.5-flash-lite`.
 - Google Sheets + Google Docs + Google Drive API: CRM, HV en Google Docs y exportación a PDF.
 - Telegram Bot API: notificaciones.
-- n8n fijado en la versión `2.45.5`, la última estable, al día en seguridad. Cada día hábil
+- n8n fijado en la versión `2.45.6`, la última estable, al día en seguridad. Cada día hábil
   un workflow de GitHub Actions la actualiza solo si sale una versión estable más nueva.
 - La VM se sincroniza sola con `main` (al encender y cada 5 minutos); solo reinicia n8n
   cuando cambian los workflows o el `docker-compose.yml`.

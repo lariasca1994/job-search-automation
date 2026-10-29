@@ -2,7 +2,7 @@ services:
   n8n:
     # Version fija: la ultima estable con parches de seguridad. Con "latest", cualquier
     # recreacion del contenedor podria traer una version con cambios incompatibles.
-    image: docker.n8n.io/n8nio/n8n:2.45.5
+    image: docker.n8n.io/n8nio/n8n:2.45.6
 
     # Sin DNS forzados: el contenedor usa el resolvedor del host (en Google Cloud,
     # el DNS interno). Con DNS publicos forzados hubo fallos intermitentes (EAI_AGAIN).
