@@ -1,26 +1,30 @@
-# Cada lunes compara la versión de n8n fijada en docker-compose.yml con la estable oficial.
-# Si hay una más nueva, abre un issue (llega por correo) para actualizarla tras revisar sus
-# notas de versión. No usa Dependabot porque propondría las versiones beta de n8n.
+# Cada día hábil, antes de que se encienda la VM, compara la versión de n8n fijada en
+# docker-compose.yml con la estable oficial. Si hay una más nueva, la fija, valida el
+# compose y la sube a main: la VM la aplica sola en su siguiente sincronización.
+# Solo sigue la etiqueta "stable" de n8n (nunca beta). No usa Dependabot porque propondría
+# las versiones beta.
 name: Versión de n8n
 
 on:
   schedule:
-    - cron: '0 13 * * 1' # lunes 8:00 hora Bogotá (UTC-5)
+    - cron: '0 12 * * 1-5' # lunes a viernes 7:00 hora Bogotá (UTC-5)
   workflow_dispatch:
 
 permissions:
-  contents: read
-  issues: write
+  contents: write
+
+concurrency:
+  group: version-n8n
+  cancel-in-progress: false
 
 jobs:
-  revisar:
+  actualizar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Comparar con la versión estable
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Fijar la versión estable de n8n
+        id: version
         run: |
           set -euo pipefail
           fijada=$(grep -oE 'n8nio/n8n:[0-9.]+' docker-compose.yml | cut -d: -f2)
@@ -30,11 +34,16 @@ jobs:
             echo "n8n está en la última versión estable."
             exit 0
           fi
-          titulo="Actualizar n8n a $estable"
-          if gh issue list --state open --search "in:title \"$titulo\"" --json number --jq 'length' | grep -qx 0; then
-            gh issue create --title "$titulo" --body "La versión fijada en \`docker-compose.yml\` es **$fijada** y la estable oficial es **$estable**.
+          docker manifest inspect "docker.n8n.io/n8nio/n8n:$estable" > /dev/null
+          sed -i "s|n8nio/n8n:$fijada|n8nio/n8n:$estable|" docker-compose.yml
+          sed -i "s|n8n fijado en la versión \`$fijada\`|n8n fijado en la versión \`$estable\`|" README.md
+          docker compose config --quiet
+          echo "nueva=$estable" >> "$GITHUB_OUTPUT"
 
-          1. Revisa las notas de versión y los avisos de seguridad de n8n.
-          2. Cambia la etiqueta de la imagen en \`docker-compose.yml\` y la versión en el README.
-          3. Haz push a \`main\`: la VM la aplica sola en su siguiente sincronización."
-          fi
+      - name: Subir a main
+        if: steps.version.outputs.nueva != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "fix(seguridad): n8n actualizado a ${{ steps.version.outputs.nueva }}"
+          git push origin HEAD:main

@@ -173,8 +173,9 @@ VM está en [`infra/`](infra/):
    menos de 5 minutos, y uno que solo cambia documentación no reinicia n8n.
 3. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida en cada push la sintaxis
    de los workflows, que no usen nodos excluidos, el `docker-compose.yml` y los scripts de
-   `infra/`. Cada lunes, `.github/workflows/version-n8n.yml` abre un issue si hay una versión
-   estable de n8n más nueva que la fijada.
+   `infra/`. Cada día hábil a las 7:00, `.github/workflows/version-n8n.yml` revisa si hay una
+   versión estable de n8n más nueva que la fijada; si la hay, la fija, valida el compose y la
+   sube a `main`, y la VM la aplica al encenderse.
 
 La importación nunca corre con n8n encendido: n8n guarda todo en SQLite y dos procesos
 escribiendo a la vez bloquean la base.

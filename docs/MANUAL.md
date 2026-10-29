@@ -128,9 +128,9 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
   no puede inventar experiencia, empresas, títulos ni certificaciones, y el chequeo
   anti-alucinación marca cualquier término nuevo.
 - **Retención limitada** de las HV generadas en el Drive (15 días).
-- **Al día en seguridad:** n8n se mantiene en su última versión estable. Cada semana se
-  revisa si salió una nueva y, al cambiarla en el repositorio, la VM la toma sola en su
-  siguiente sincronización con GitHub.
+- **Al día en seguridad:** n8n se mantiene solo en su última versión estable: cada día hábil
+  se revisa si salió una nueva y, si es así, se aplica automáticamente antes de que la VM
+  se encienda.
 - **VM encendida solo 3 horas al día** (9:00 a 12:00), lo que reduce su exposición.
 
 ## 6. Agradecimientos

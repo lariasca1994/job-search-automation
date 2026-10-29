@@ -30,6 +30,9 @@ services:
       # limite por defecto de 5 min por nodo Code se queda corto en dias con
       # muchas ofertas.
       - N8N_RUNNERS_TASK_TIMEOUT=900
+      # En la e2-micro el ejecutor de los nodos Code puede tardar mas de los 30 s por
+      # defecto en conectarse al arrancar; con poco margen, los nodos Code fallan.
+      - N8N_RUNNERS_GRANT_TOKEN_TTL=120
 
       # Nodos que estos workflows no usan y que ejecutan comandos, leen archivos del
       # servidor o corren codigo fuera del aislamiento del nodo Code: n8n ni los carga.

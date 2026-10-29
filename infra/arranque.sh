@@ -11,6 +11,7 @@ source /etc/default/jobsearch
 # Una sola sincronización a la vez (arranque y cron pueden coincidir)
 exec 9>/var/lock/actualizar-n8n.lock
 flock -w 900 9
+export SINCRONIZACION_CON_CANDADO=1
 
 cd "$REPO_DIR"
 git config --system --get-all safe.directory | grep -qx "$REPO_DIR" \

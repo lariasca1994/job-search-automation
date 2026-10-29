@@ -7,6 +7,12 @@
 #   (SQLITE_BUSY), por eso la importación nunca corre con n8n encendido.
 set -euo pipefail
 
+# Ejecutado a mano (sin infra/arranque.sh): toma el mismo candado para no cruzarse con el cron
+if [ -z "${SINCRONIZACION_CON_CANDADO:-}" ]; then
+  exec 9>/var/lock/actualizar-n8n.lock
+  flock -w 900 9
+fi
+
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ESTADO=/var/lib/jobsearch/ultimo-commit
 cd "$REPO_DIR"
