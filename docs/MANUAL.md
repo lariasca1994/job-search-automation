@@ -103,7 +103,22 @@ Cada fila es una oferta elegida:
 1. Abre el Google Doc de la oferta.
 2. Revisa `posible_alucinacion` y corrige lo que no sea cierto.
 3. Sube el **PDF**. Si corregiste el Doc, descarga un PDF nuevo (*Archivo → Descargar → PDF*).
-4. Actualiza `fecha_postulacion` y `estado`.
+4. Actualiza `fecha_postulacion` (por ejemplo `2026-10-23` o `23/10/2026`) y `estado`:
+   `Postulado` al postularte, `Entrevista` si te llaman y `Descartado` si decides no
+   postularte. Las ofertas nuevas llegan como `Pendiente`.
+
+### 4.4 Cómo leer las métricas de los viernes
+
+Cada línea del mensaje dice entre paréntesis la columna de la planilla de la que sale:
+
+| Sección | Qué mide | Columnas |
+|---|---|---|
+| Esta semana | Ofertas nuevas y postulaciones de los últimos 7 días | `fecha_deteccion`, `fecha_postulacion` |
+| En la planilla | Cuántas filas hay en cada `estado` y cuántas siguen por postular | `estado`, `fecha_postulacion` |
+| Embudo | De las ofertas con match ≥ 83 %, a cuántas te postulaste; de las postuladas, cuántas llegaron a entrevista | `match_pct`, `estado` |
+| ¿El match predice bien? | Promedio de match de todas, de las postuladas y de las que llegaron a entrevista (sin contar 0 ni vacíos) | `match_pct` |
+| HV adaptada | Cuántas tienen Google Doc y PDF, y si las postuladas con HV llegan más a entrevista que las sin HV | `hv_adaptada`, `hv_pdf` |
+| Por fuente | Ofertas y postulaciones de cada portal | `fuente` |
 
 ## 5. Seguridad: tu información protegida
 

@@ -172,8 +172,19 @@ Escribe una `X` en la columna `generar` de cualquier fila: el siguiente ciclo de
 
 ### 5.5 Registrar tus postulaciones
 
-Actualiza `fecha_postulacion` y `estado` de cada oferta. Con esos datos, el resumen
-de los viernes mide el embudo: alto match → postulación → entrevista.
+Actualiza `fecha_postulacion` (por ejemplo `2026-10-23` o `23/10/2026`) y `estado` de
+cada oferta. El resumen de los viernes mide el embudo con estas columnas:
+
+| Valor de `estado` | Cómo cuenta |
+|---|---|
+| `Pendiente` | Lo escriben los workflows al guardar la oferta: aún no te postulas. |
+| `Postulado` | Te postulaste. También cuenta cualquier fila con `fecha_postulacion`. |
+| `Entrevista` | Te llamaron a entrevista (cuenta también como postulada). |
+| `Descartado` | No te vas a postular: no entra en el embudo. |
+
+Cada línea del resumen indica la columna de la que sale. Los `match_pct` en 0 o vacíos
+no se usan en los promedios, y "Esta semana" son los últimos 7 días según
+`fecha_deteccion` y `fecha_postulacion`.
 
 ### 5.6 Resúmenes por Telegram
 
