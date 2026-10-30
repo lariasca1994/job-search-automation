@@ -48,6 +48,11 @@ echo "Cambios a aplicar:"; echo "$cambios"
 
 # 3. Importar y publicar con n8n detenido (un solo proceso sobre la base)
 docker compose pull --quiet n8n
+# Si algo falla con n8n detenido, se vuelve a levantar: nunca queda apagado por una
+# sincronización. El registro del fallo se conserva (el cron sobrescribe el suyo).
+trap 'echo "Falló la sincronización (línea $LINENO): se levanta n8n de nuevo" >&2
+      cp /var/log/autoupdate.log /var/log/autoupdate-ultimo-error.log 2>/dev/null || true
+      docker compose up -d' ERR
 docker compose stop n8n
 # Las variables del bloque se expanden dentro del contenedor, no aquí.
 # shellcheck disable=SC2016
@@ -66,7 +71,7 @@ for _ in $(seq 1 60); do
     # Limpieza: imágenes y contenedores que ya no usa nadie (versiones viejas de n8n)
     docker container prune -f > /dev/null
     docker image prune -af > /dev/null
-    echo "=== n8n $(docker exec n8n n8n --version) listo con $(git rev-parse --short HEAD)"
+    echo "=== $(docker inspect -f '{{.Config.Image}}' n8n) listo con $(git rev-parse --short HEAD)"
     exit 0
   fi
   sleep 5
