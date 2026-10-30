@@ -23,7 +23,7 @@ sistema y qué protege. Para la instalación y el despliegue vuelve al [README](
 
 Cada mañana de lunes a viernes, el sistema revisa cuatro portales de empleo, descarta lo que no
 encaja, pide a una IA (Gemini) que califique cada oferta contra tu hoja de vida (HV) y se queda con
-las 5 mejores de cada portal con **match ≥ 83 %** (filtrando que la oferta tenga máximo 3 días de publicación y salario ≥ $3.000.000 COP o no especificado). Para ellas genera una HV adaptada (sin inventar
+las 5 mejores de cada portal con **match ≥ 83 %** (filtrando que la oferta tenga máximo 3 días de publicación y salario igual o mayor al mínimo que definas, o no especificado). Para ellas genera una HV adaptada (sin inventar
 experiencia) en Google Docs y PDF, y te avisa por Telegram.
 
 ![Arquitectura](arquitectura.svg)
@@ -103,9 +103,13 @@ Cada fila es una oferta elegida:
 1. Abre el Google Doc de la oferta.
 2. Revisa `posible_alucinacion` y corrige lo que no sea cierto.
 3. Sube el **PDF**. Si corregiste el Doc, descarga un PDF nuevo (*Archivo → Descargar → PDF*).
-4. Actualiza `fecha_postulacion` (por ejemplo `2026-10-23` o `23/10/2026`) y `estado`:
-   `Postulado` al postularte, `Entrevista` si te llaman y `Descartado` si decides no
-   postularte. Las ofertas nuevas llegan como `Pendiente`.
+4. En el aviso de Telegram toca **✅ Apliqué** si te postulaste o **❌ No apliqué** si no.
+   La planilla se actualiza sola en un par de minutos (`estado` y `fecha_postulacion`) y el
+   mensaje marca con ● tu elección; puedes cambiarla con el otro botón. Si la VM estaba
+   apagada, el toque se registra al encenderse (Telegram lo guarda 24 horas).
+5. Si te llaman a entrevista, escribe `Entrevista` en `estado`. También puedes editar a mano
+   `estado` (`Postulado`, `Entrevista`, `Descartado`) y `fecha_postulacion` (por ejemplo
+   `2026-10-23` o `23/10/2026`). Las ofertas nuevas llegan como `Pendiente`.
 
 ### 4.4 Cómo leer las métricas de los viernes
 

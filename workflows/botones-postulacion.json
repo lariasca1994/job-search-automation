@@ -1,0 +1,389 @@
+{
+    "name": "Botones de postulacion GO",
+    "nodes": [
+        {
+            "id": "e2ed0efb-9f2a-4045-9bc6-fe9fa0a60f9e",
+            "name": "Cada 2 min",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                0
+            ],
+            "notes": "Corre solo mientras la VM está encendida. Sin toques nuevos termina en el primer nodo y no guarda la ejecución (settings: saveDataSuccessExecution = none).",
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "*/2 * * * *"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "parameters": {},
+            "id": "40922e88-86fc-4e62-9731-beb15b6cfa2d",
+            "name": "Ejecutar a mano (prueba)",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                0,
+                200
+            ],
+            "notes": "Para probar el workflow desde el editor (Execute workflow) o por CLI (n8n execute --id=...). No afecta el horario automatico."
+        },
+        {
+            "id": "c9d3542a-88dd-4fcc-b480-3b7c31ea0ef7",
+            "name": "Leer botones",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                224,
+                0
+            ],
+            "parameters": {
+                "jsCode": "// Lee los botones \"Apliqué / No apliqué\" tocados en Telegram. Consulta getUpdates, así que la\n// VM no necesita quedar expuesta a internet. Telegram guarda los toques 24 h: los que llegan\n// con la VM apagada se procesan al encenderse. Solo se aceptan los del chat configurado.\nconst token = $env.TELEGRAM_BOT_TOKEN;\nconst chat = String($env.TELEGRAM_CHAT_ID);\nconst estado = $getWorkflowStaticData('global');\n\nconst r = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/getUpdates`,\n  body: { offset: estado.offset || 0, timeout: 0, allowed_updates: ['callback_query'] },\n  json: true,\n});\nconst updates = r.result || [];\n// El avance se guarda solo si la ejecución termina bien: si falla la planilla, se reintenta\nif (updates.length) estado.offset = updates[updates.length - 1].update_id + 1;\n\nconst out = [];\nfor (const u of updates) {\n  const cb = u.callback_query;\n  if (!cb || !cb.message || String(cb.message.chat.id) !== chat) continue;\n  const m = /^([an]):([a-z0-9]+)$/.exec(cb.data || '');\n  if (!m) continue;\n  out.push({ json: {\n    accion: m[1],\n    id: m[2],\n    callback_id: cb.id,\n    chat_id: cb.message.chat.id,\n    message_id: cb.message.message_id,\n    teclado: (cb.message.reply_markup || {}).inline_keyboard || [],\n  } });\n}\nreturn out;"
+            }
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $env.SHEET_ID }}",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Primera pestana"
+                },
+                "options": {}
+            },
+            "id": "910c165a-3135-44df-87d9-b5cc75cfa8ed",
+            "name": "Leer planilla",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                448,
+                0
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "name": "Google Sheets account"
+                }
+            },
+            "executeOnce": true
+        },
+        {
+            "id": "14736798-3858-4f0c-b64b-a95bcc792ed8",
+            "name": "Resolver filas",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                672,
+                0
+            ],
+            "parameters": {
+                "jsCode": "// Busca la fila de cada botón por la huella de su URL y arma la actualización de la planilla.\n// Si se tocaron los dos botones de una oferta, vale el último.\nconst huella = (u) => String(u).split('').reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261).toString(36);\nconst token = $env.TELEGRAM_BOT_TOKEN;\nconst filas = {};\nfor (const i of $('Leer planilla').all()) if (i.json.url) filas[huella(i.json.url)] = i.json;\n\nconst ultimos = {};\nfor (const i of $('Leer botones').all()) ultimos[i.json.id] = i.json;\n\nconst hoy = $now.toFormat('yyyy-MM-dd');\nconst out = [];\nfor (const b of Object.values(ultimos)) {\n  const fila = filas[b.id];\n  if (!fila) {\n    try {\n      await this.helpers.httpRequest({\n        method: 'POST', url: `https://api.telegram.org/bot${token}/answerCallbackQuery`, json: true,\n        body: { callback_query_id: b.callback_id, show_alert: true,\n                text: 'No encontré esta oferta en la planilla: márcala a mano en la columna estado.' },\n      });\n    } catch (e) { /* el toque pudo vencer: no detiene el resto */ }\n    continue;\n  }\n  out.push({ json: b.accion === 'a'\n    ? { url: fila.url, estado: 'Postulado', fecha_postulacion: fila.fecha_postulacion || hoy }\n    : { url: fila.url, estado: 'Descartado', fecha_postulacion: '' } });\n}\nreturn out;"
+            }
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $env.SHEET_ID }}",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Primera pestana"
+                },
+                "columns": {
+                    "mappingMode": "autoMapInputData",
+                    "value": {},
+                    "matchingColumns": [
+                        "url"
+                    ],
+                    "schema": [
+                        {
+                            "id": "notificado",
+                            "displayName": "notificado",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "perfil_sugerido",
+                            "displayName": "perfil_sugerido",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fuente",
+                            "displayName": "fuente",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "titulo",
+                            "displayName": "titulo",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "empresa",
+                            "displayName": "empresa",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "ubicacion",
+                            "displayName": "ubicacion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "url",
+                            "displayName": "url",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "keyword_busqueda",
+                            "displayName": "keyword_busqueda",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fecha_deteccion",
+                            "displayName": "fecha_deteccion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "fecha_postulacion",
+                            "displayName": "fecha_postulacion",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "generar",
+                            "displayName": "generar",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "hv_adaptada",
+                            "displayName": "hv_adaptada",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "estado",
+                            "displayName": "estado",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "match_pct",
+                            "displayName": "match_pct",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "ats_tip",
+                            "displayName": "ats_tip",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "row_number",
+                            "displayName": "row_number",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "number",
+                            "canBeUsedToMatch": true,
+                            "readOnly": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "id": "03b49237-9b17-4044-be19-3e847a9c0490",
+            "name": "Actualizar estado",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                896,
+                0
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "name": "Google Sheets account"
+                }
+            }
+        },
+        {
+            "id": "2cd840bb-0e7e-47e3-9072-3dba2dcc7c2e",
+            "name": "Confirmar en Telegram",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1120,
+                0
+            ],
+            "executeOnce": true,
+            "parameters": {
+                "jsCode": "// Confirma en Telegram lo que quedó en la planilla y marca en el mensaje la opción elegida\n// (los dos botones siguen disponibles por si hay que cambiarla).\nconst huella = (u) => String(u).split('').reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261).toString(36);\nconst token = $env.TELEGRAM_BOT_TOKEN;\nconst tg = async (metodo, body) => {\n  try {\n    await this.helpers.httpRequest({ method: 'POST', url: `https://api.telegram.org/bot${token}/${metodo}`, body, json: true });\n  } catch (e) { /* un toque vencido o un mensaje sin cambios no detiene el resto */ }\n};\n\nconst estados = {};\nfor (const i of $('Resolver filas').all()) estados[huella(i.json.url)] = i.json.estado;\n\nconst mensajes = {};\nfor (const { json: b } of $('Leer botones').all()) {\n  const estado = estados[b.id];\n  if (!estado) continue;\n  await tg('answerCallbackQuery', {\n    callback_query_id: b.callback_id,\n    text: estado === 'Postulado' ? 'Registrado: te postulaste' : 'Registrado: no aplicaste',\n  });\n  mensajes[`${b.chat_id}:${b.message_id}`] = { b, estado };\n}\nfor (const { b, estado } of Object.values(mensajes)) {\n  const teclado = b.teclado.filter((fila) => !fila.some((x) => x.callback_data));\n  teclado.push([\n    { text: (estado === 'Postulado' ? '● ' : '') + '✅ Apliqué', callback_data: 'a:' + b.id },\n    { text: (estado === 'Descartado' ? '● ' : '') + '❌ No apliqué', callback_data: 'n:' + b.id },\n  ]);\n  await tg('editMessageReplyMarkup', { chat_id: b.chat_id, message_id: b.message_id, reply_markup: { inline_keyboard: teclado } });\n}\nreturn [{ json: { procesados: Object.keys(mensajes).length } }];"
+            }
+        }
+    ],
+    "connections": {
+        "Cada 2 min": {
+            "main": [
+                [
+                    {
+                        "node": "Leer botones",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ejecutar a mano (prueba)": {
+            "main": [
+                [
+                    {
+                        "node": "Leer botones",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leer botones": {
+            "main": [
+                [
+                    {
+                        "node": "Leer planilla",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leer planilla": {
+            "main": [
+                [
+                    {
+                        "node": "Resolver filas",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Resolver filas": {
+            "main": [
+                [
+                    {
+                        "node": "Actualizar estado",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Actualizar estado": {
+            "main": [
+                [
+                    {
+                        "node": "Confirmar en Telegram",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false,
+        "saveDataSuccessExecution": "none",
+        "saveManualExecutions": false
+    },
+    "nodeGroups": [],
+    "id": "BotonesPostula01",
+    "tags": []
+}

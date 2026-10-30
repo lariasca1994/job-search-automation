@@ -46,9 +46,10 @@ if [ -z "$cambios" ]; then
 fi
 echo "Cambios a aplicar:"; echo "$cambios"
 
-# 3. De 9:00 a 12:00 (Bogotá) corren los workflows: el cron no detiene n8n en ese horario.
-#    Los cambios quedan pendientes y los aplica el arranque de la VM a las 8:40.
-hora=$(TZ=America/Bogota date +%H%M)
+# 3. De 9:00 a 12:00 (hora de ZONA_HORARIA en el .env) corren los workflows: el cron no
+#    detiene n8n en ese horario. Los cambios quedan pendientes para el arranque de la VM.
+zona=$(sed -n 's/^ZONA_HORARIA=//p' .env 2>/dev/null | tr -d '"\r' | tail -1)
+hora=$(TZ="${zona:-UTC}" date +%H%M)
 if [ "${1:-}" = "--cron" ] && [ -n "$corriendo" ] && (( 10#$hora >= 900 && 10#$hora < 1200 )); then
   echo "Horario de los workflows: los cambios se aplican en el próximo arranque."
   exit 0

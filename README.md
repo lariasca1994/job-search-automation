@@ -39,7 +39,7 @@ Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scra
 ### Qué hace
 
 - **Recolecta** ofertas nuevas de cuatro portales de empleo, buscando por los perfiles y keywords que definas en el `.env` (`PERFILES_BUSQUEDA`).
-- **Filtra** automáticamente por antigüedad (máximo 3 días de publicación), salario (≥ $3.000.000 COP o no especificado/a convenir), seniority, rubro y zona antes de gastar IA.
+- **Filtra** automáticamente por antigüedad (máximo 3 días de publicación), salario (mínimo definido en el `.env`, o no especificado/a convenir), seniority, rubro y zona antes de gastar IA.
 - **Evalúa con IA (Gemini)** cada oferta nueva contra tu HV, por lotes de 8 ofertas por llamada, y **guarda solo las 5 mejores de cada fuente con match ≥ 83%**. Las descartadas se recuerdan 21 días para no volver a evaluarlas.
 - **Guarda** las elegidas en una Google Sheet que funciona como CRM personal.
 - **Genera la HV adaptada** automáticamente para esas ofertas, en **Google Docs y en PDF** (`HV_<Nombre>_<Oferta>`), lista para subir a los portales, que no aceptan Google Docs. Reglas fijas:
@@ -72,7 +72,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40
 ### Stack
 
 - [n8n](https://n8n.io/) self-hosted (Docker): todo el scraping y las llamadas a IA son Code nodes en JS puro (`this.helpers.httpRequest`).
-- [Gemini API](https://aistudio.google.com/apikey) (Google AI Studio, nivel gratuito), por su endpoint compatible con OpenAI. Si `gemini-3.8-flash` se queda sin cuota o está saturado, los workflows pasan solos a `gemini-flash-lite-latest` y luego a `gemini-3.5-flash-lite`.
+- [Gemini API](https://aistudio.google.com/apikey) (Google AI Studio), por su endpoint compatible con OpenAI. Si `gemini-3.8-flash` se queda sin cuota o está saturado, los workflows pasan solos a `gemini-flash-lite-latest` y luego a `gemini-3.5-flash-lite`.
 - Google Sheets + Google Docs + Google Drive API: CRM, HV en Google Docs y exportación a PDF.
 - Telegram Bot API: notificaciones.
 - n8n fijado en la versión `2.45.6`, la última estable, al día en seguridad. De domingo a jueves
@@ -94,6 +94,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40
 │   ├── generar-hv-adaptada.json     # HV adaptada por IA + Google Doc + PDF + chequeo anti-alucinación
 │   ├── resumen-diario-telegram.json # resumen diario de ofertas con match >= 83%
 │   ├── metricas-semanales.json      # embudo de conversión, viernes
+│   ├── botones-postulacion.json     # botones Apliqué / No apliqué de Telegram → estado en la planilla
 │   └── limpieza-drive-hv.json       # viernes: HV (Doc y PDF) con más de 15 días a la papelera
 ├── infra/                   # sincronización de la VM con GitHub (arranque, script y cron)
 ├── .github/workflows/       # CI, actualización diaria de n8n y depuración quincenal
@@ -120,6 +121,7 @@ Los workflows son independientes entre sí y se coordinan únicamente a través 
 
 - Los parsers leen el HTML público de cada sitio; si cambian su markup, el nodo `Parsear HTML` correspondiente devuelve 0 resultados sin error.
 - Si una búsqueda puntual falla (error 4xx/5xx del portal), se reintenta y, si sigue fallando, esa keyword aporta 0 ofertas y el resto del workflow continúa.
+- Si Gemini responde lento, cada recolector deja de evaluar a los 11 minutos y las ofertas que faltan se evalúan en la corrida siguiente, sin que n8n corte el nodo ni afecte a otros workflows.
 - Si Gemini no logra evaluar ninguna oferta (cuota agotada, key inválida), la ejecución queda en rojo en n8n con el motivo, en vez de terminar "exitosa" sin datos.
 - Cada workflow tiene, además de su horario, un disparador manual (`Ejecutar a mano (prueba)`) para probarlo desde el editor o por CLI sin afectar el horario.
 
@@ -173,8 +175,17 @@ Escribe una `X` en la columna `generar` de cualquier fila: el siguiente ciclo de
 
 ### 5.5 Registrar tus postulaciones
 
-Actualiza `fecha_postulacion` (por ejemplo `2026-10-23` o `23/10/2026`) y `estado` de
-cada oferta. El resumen de los viernes mide el embudo con estas columnas:
+Cada aviso de HV lista en Telegram trae dos botones:
+
+- **✅ Apliqué**: pone `estado = Postulado` y la fecha de hoy en `fecha_postulacion`.
+- **❌ No apliqué**: pone `estado = Descartado` y deja vacía la fecha.
+
+En un par de minutos la planilla se actualiza y el mensaje marca con ● la opción elegida;
+puedes cambiarla tocando el otro botón. Telegram guarda los toques 24 horas: si tocas un
+botón con la VM apagada, se registra al encenderse; uno del viernes por la tarde ya no
+llega el lunes, así que ese márcalo a mano. También puedes editar `fecha_postulacion`
+(por ejemplo `2026-10-23` o `23/10/2026`) y `estado` directamente. El resumen de los
+viernes mide el embudo con estas columnas:
 
 | Valor de `estado` | Cómo cuenta |
 |---|---|
@@ -222,9 +233,10 @@ fuente | titulo | empresa | ubicacion | url | keyword_busqueda | fecha_deteccion
    | `ZONA_HORARIA`, `PAIS` | horario local y contexto de país para la IA |
    | `PERFILES_BUSQUEDA` | perfiles y keywords a buscar (JSON) |
    | `ZONA_REGEX`, `EXCLUIR_PUESTO_REGEX`, `EXCLUIR_RUBRO_REGEX` | qué ubicaciones aceptar y qué puestos/rubros descartar |
+   | `SALARIO_MINIMO` | salario mensual mínimo aceptado (vacío = no filtra por salario) |
    | `COMPUTRABAJO_DOMINIO`, `UBICACION_*` | dominio y ubicación de cada portal |
 
-3. **Criterios fijos**: `umbral_match` (83), `max_ofertas` (5) y `max_candidatos` (30) están en el nodo `Config (perfiles + criterios)` de cada scraper. Se filtran automáticamente publicaciones de más de 3 días y salarios explícitos menores a $3.000.000 COP.
+3. **Criterios fijos**: `umbral_match` (83), `max_ofertas` (5) y `max_candidatos` (30) están en el nodo `Config (perfiles + criterios)` de cada scraper. Se filtran automáticamente publicaciones de más de 3 días y salarios explícitos menores a `SALARIO_MINIMO`.
 
 ### Cómo ejecutarlo
 
@@ -276,7 +288,7 @@ Todo se ajusta desde el `.env`, sin tocar los workflows:
    sirven, reemplázalos con `EXCLUIR_PUESTO_REGEX` y `EXCLUIR_RUBRO_REGEX`.
 4. **Tu HV**: `HV_BASE_TEXT` y `HV_PREFIJO_ARCHIVO`. La IA conserva tu nombre, tu
    contacto y todos los enlaces tal como estén en la HV base.
-5. **Gemini**: confirma que el nivel gratuito de la API esté disponible en tu país.
+5. **Gemini**: confirma que la API esté disponible en tu país.
 
 ---
 

@@ -36,7 +36,7 @@ services:
       # limite por defecto de 5 min por nodo Code se queda corto en dias con
       # muchas ofertas.
       - N8N_RUNNERS_TASK_TIMEOUT=900
-      # En la e2-micro el ejecutor de los nodos Code puede tardar mas de los 30 s por
+      # En una VM pequena el ejecutor de los nodos Code puede tardar mas de los 30 s por
       # defecto en conectarse al arrancar; con poco margen, los nodos Code fallan.
       - N8N_RUNNERS_GRANT_TOKEN_TTL=120
 
@@ -66,6 +66,7 @@ services:
       - ZONA_REGEX=${ZONA_REGEX:-.}
       - EXCLUIR_PUESTO_REGEX=${EXCLUIR_PUESTO_REGEX:-}
       - EXCLUIR_RUBRO_REGEX=${EXCLUIR_RUBRO_REGEX:-}
+      - SALARIO_MINIMO=${SALARIO_MINIMO:-}
       - COMPUTRABAJO_DOMINIO=${COMPUTRABAJO_DOMINIO:-co.computrabajo.com}
       - UBICACION_COMPUTRABAJO=${UBICACION_COMPUTRABAJO:-}
       - UBICACION_ELEMPLEO=${UBICACION_ELEMPLEO:-}

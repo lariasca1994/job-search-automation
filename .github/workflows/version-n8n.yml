@@ -7,7 +7,7 @@ name: Versión de n8n
 
 on:
   schedule:
-    - cron: '0 23 * * 0-4' # domingo a jueves 18:00 hora Bogotá (UTC-5); GitHub puede retrasarlo horas
+    - cron: '0 23 * * 0-4' # domingo a jueves 23:00 UTC, por la tarde en América; GitHub puede retrasarlo horas
   workflow_dispatch:
 
 permissions:

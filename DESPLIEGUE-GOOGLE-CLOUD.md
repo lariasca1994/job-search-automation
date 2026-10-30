@@ -1,4 +1,4 @@
-# Desplegar en Google Cloud (VM e2-micro del nivel gratuito)
+# Desplegar en Google Cloud (VM con Docker)
 
 Guía para dejar n8n corriendo en una VM de Google Cloud que se enciende a las
 8:40 y se apaga a las 12:00, de lunes a viernes. Los comandos `gcloud` se
@@ -9,12 +9,8 @@ el SDK de Google Cloud instalado.
 ## Por qué una VM y no Cloud Run
 
 n8n tiene que estar encendido para disparar sus horarios internos. Cloud Run
-escala a cero sin tráfico entrante, así que los horarios no se dispararían. Una
-`e2-micro` está en el nivel *Always Free* de Compute Engine (en `us-west1`,
-`us-central1` o `us-east1`, con 30 GB de disco estándar).
-
-Activa una alerta de presupuesto en $1 (*Facturación → Presupuestos y
-alertas*): es gratis y te avisa si algo sale del nivel gratuito.
+escala a cero sin tráfico entrante, así que los horarios no se dispararían. Basta
+una VM pequeña (1 GB de RAM y 30 GB de disco estándar).
 
 ## 0. Variables
 
@@ -22,8 +18,8 @@ Define estos valores una vez (ajústalos a tu gusto) y úsalos en todos los paso
 
 ```bash
 VM=n8n-busqueda-empleo
-REGION=us-central1
-ZONE=us-central1-a
+REGION=<tu-region>
+ZONE=<tu-zona>
 ZONA_HORARIA=America/Mexico_City   # la tuya, formato IANA
 REPO=https://github.com/<tu-usuario>/<tu-repo>.git
 ```
@@ -79,7 +75,7 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo usermod -aG docker $USER
 
-# la e2-micro trae 1 GB de RAM: 2 GB de swap
+# con 1 GB de RAM: 2 GB de swap
 sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
 sudo mkswap /swapfile && sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
@@ -176,8 +172,7 @@ VM está en [`infra/`](infra/):
 3. **Si una sincronización falla** con n8n detenido, el script lo vuelve a levantar y guarda
    el registro en `/var/log/autoupdate-ultimo-error.log`.
 4. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida en cada push la sintaxis
-   de los workflows, que no usen nodos excluidos, el `docker-compose.yml` y los scripts de
-   `infra/`. De domingo a jueves a las 18:00, `.github/workflows/version-n8n.yml` revisa si hay
+   de los workflows, el `docker-compose.yml` y los scripts de `infra/`. De domingo a jueves a las 18:00, `.github/workflows/version-n8n.yml` revisa si hay
    una versión estable de n8n más nueva que la fijada; si la hay, la fija, valida el compose
    y la sube a `main`, y la VM la aplica en su arranque de las 8:40.
 
@@ -207,11 +202,3 @@ abre el workflow y pulsa *Execute workflow*. Por CLI (en la VM):
 ```bash
 docker exec -u node -e N8N_RUNNERS_BROKER_PORT=5680 n8n n8n execute --id=<id-del-workflow>
 ```
-
-## Costos
-
-- *Facturación → Informes*: filtra por el proyecto y confirma que Compute
-  Engine está en $0.
-- La IP externa de la VM es efímera y cambia en cada encendido; no se usa para
-  nada, así que no hace falta reservarla (una IP estática con la VM apagada sí
-  cobra).
