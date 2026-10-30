@@ -46,7 +46,15 @@ if [ -z "$cambios" ]; then
 fi
 echo "Cambios a aplicar:"; echo "$cambios"
 
-# 3. Importar y publicar con n8n detenido (un solo proceso sobre la base)
+# 3. De 9:00 a 12:00 (Bogotá) corren los workflows: el cron no detiene n8n en ese horario.
+#    Los cambios quedan pendientes y los aplica el arranque de la VM a las 8:40.
+hora=$(TZ=America/Bogota date +%H%M)
+if [ "${1:-}" = "--cron" ] && [ -n "$corriendo" ] && (( 10#$hora >= 900 && 10#$hora < 1200 )); then
+  echo "Horario de los workflows: los cambios se aplican en el próximo arranque."
+  exit 0
+fi
+
+# 4. Importar y publicar con n8n detenido (un solo proceso sobre la base)
 docker compose pull --quiet n8n
 # Si algo falla con n8n detenido, se vuelve a levantar: nunca queda apagado por una
 # sincronización. El registro del fallo se conserva (el cron sobrescribe el suyo).
@@ -63,7 +71,7 @@ docker compose run --rm --no-deps -T --entrypoint sh n8n -c '
     n8n publish:workflow --id="$id" || echo "No se pudo publicar $id (¿faltan credenciales?)"
   done'
 
-# 4. Levantar n8n y esperar a que responda
+# 5. Levantar n8n y esperar a que responda
 docker compose up -d
 for _ in $(seq 1 60); do
   if curl -fsS http://127.0.0.1:5678/healthz > /dev/null 2>&1; then

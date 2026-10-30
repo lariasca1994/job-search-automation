@@ -60,7 +60,7 @@ Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cad
 
 | Plataforma | Tipo | Qué hace en el proyecto |
 |---|---|---|
-| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Nube | Una VM con Docker corre n8n; una política de horario la enciende a las 9:00 y la apaga a las 12:00, de lunes a viernes. |
+| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Nube | Una VM con Docker corre n8n; una política de horario la enciende a las 8:40 y la apaga a las 12:00, de lunes a viernes. |
 | ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white) | Automatización | Orquesta los workflows: recolección, filtro, evaluación con IA, HV adaptada, resumen y métricas. |
 | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) | Contenedores | Empaqueta n8n con `docker-compose.yml`, igual en local y en la VM. |
 | ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white) | API / servicio externo (IA) | Califica el % de compatibilidad de cada oferta y redacta la HV adaptada. |
@@ -144,10 +144,10 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
   anti-alucinación marca cualquier término nuevo.
 - **Retención limitada:** las HV generadas en el Drive y el historial de ejecuciones se
   borran a los 15 días.
-- **Al día en seguridad:** n8n se mantiene solo en su última versión estable: cada día hábil
-  se revisa si salió una nueva y, si es así, se aplica automáticamente antes de que la VM
-  se encienda.
-- **VM encendida solo 3 horas al día** (9:00 a 12:00), lo que reduce su exposición.
+- **Al día en seguridad:** n8n se mantiene solo en su última versión estable: cada tarde de
+  domingo a jueves se revisa si salió una nueva y, si es así, se aplica automáticamente al
+  encender la VM, antes del primer workflow.
+- **VM encendida solo 3 horas y 20 minutos al día** (8:40 a 12:00), lo que reduce su exposición.
 
 ## 6. Agradecimientos
 

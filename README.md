@@ -56,7 +56,7 @@ Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scra
 
 ### Horario (L-V, hora local)
 
-La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 9:00 y se apaga a las 12:00 (política de horario de GCP), así que todo ocurre dentro de esa ventana, viernes incluido:
+La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40 (para aplicar actualizaciones antes del primer workflow) y se apaga a las 12:00 (política de horario de GCP), así que todo ocurre dentro de esa ventana, viernes incluido:
 
 | Hora | Workflow |
 |---|---|
@@ -75,10 +75,11 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 9:00
 - [Gemini API](https://aistudio.google.com/apikey) (Google AI Studio, nivel gratuito), por su endpoint compatible con OpenAI. Si `gemini-3.8-flash` se queda sin cuota o está saturado, los workflows pasan solos a `gemini-flash-lite-latest` y luego a `gemini-3.5-flash-lite`.
 - Google Sheets + Google Docs + Google Drive API: CRM, HV en Google Docs y exportación a PDF.
 - Telegram Bot API: notificaciones.
-- n8n fijado en la versión `2.45.6`, la última estable, al día en seguridad. Cada día hábil
-  un workflow de GitHub Actions la actualiza solo si sale una versión estable más nueva.
+- n8n fijado en la versión `2.45.6`, la última estable, al día en seguridad. De domingo a jueves
+  por la tarde un workflow de GitHub Actions la actualiza solo si sale una estable más nueva.
 - La VM se sincroniza sola con `main` (al encender y cada 5 minutos); solo reinicia n8n
-  cuando cambian los workflows o el `docker-compose.yml`.
+  cuando cambian los workflows o el `docker-compose.yml`, y nunca de 9:00 a 12:00, mientras
+  corren los workflows.
 
 ---
 
@@ -128,7 +129,7 @@ Los workflows son independientes entre sí y se coordinan únicamente a través 
 
 | Plataforma | Función en el proyecto |
 |---|---|
-| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Una VM con Docker corre n8n; una política de horario la enciende a las 9:00 y la apaga a las 12:00, de lunes a viernes. |
+| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Una VM con Docker corre n8n; una política de horario la enciende a las 8:40 y la apaga a las 12:00, de lunes a viernes. |
 | ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white) | Orquesta los workflows: recolección, filtro, evaluación con IA, HV adaptada, resumen y métricas. |
 | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) | Empaqueta n8n con `docker-compose.yml`, igual en local y en la VM. |
 | ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white) | Califica el % de compatibilidad de cada oferta y redacta la HV adaptada. |

@@ -1,4 +1,4 @@
-# Cada día hábil, antes de que se encienda la VM, compara la versión de n8n fijada en
+# Cada tarde de domingo a jueves (la VM está apagada) compara la versión de n8n fijada en
 # docker-compose.yml con la estable oficial. Si hay una más nueva, la fija, valida el
 # compose y la sube a main: la VM la aplica sola en su siguiente sincronización.
 # Solo sigue la etiqueta "stable" de n8n (nunca beta). No usa Dependabot porque propondría
@@ -7,7 +7,7 @@ name: Versión de n8n
 
 on:
   schedule:
-    - cron: '0 12 * * 1-5' # lunes a viernes 7:00 hora Bogotá (UTC-5)
+    - cron: '0 23 * * 0-4' # domingo a jueves 18:00 hora Bogotá (UTC-5); GitHub puede retrasarlo horas
   workflow_dispatch:
 
 permissions:

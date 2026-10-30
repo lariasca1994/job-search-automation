@@ -1,7 +1,7 @@
 # Desplegar en Google Cloud (VM e2-micro del nivel gratuito)
 
 Guía para dejar n8n corriendo en una VM de Google Cloud que se enciende a las
-9:00 y se apaga a las 12:00, de lunes a viernes. Los comandos `gcloud` se
+8:40 y se apaga a las 12:00, de lunes a viernes. Los comandos `gcloud` se
 ejecutan desde **Cloud Shell** (el ícono `>_` arriba a la derecha en
 [console.cloud.google.com](https://console.cloud.google.com)) o desde tu PC con
 el SDK de Google Cloud instalado.
@@ -43,12 +43,12 @@ gcloud compute instances create $VM \
 No hace falta IP estática ni abrir puertos: al editor de n8n se entra por un
 túnel SSH (paso 6), y n8n solo escucha en `localhost` dentro de la VM.
 
-## 2. Horario de encendido y apagado (L-V, 9:00 a 12:00)
+## 2. Horario de encendido y apagado (L-V, 8:40 a 12:00)
 
 ```bash
 gcloud compute resource-policies create instance-schedule n8n-horario \
   --region=$REGION \
-  --vm-start-schedule="0 9 * * 1-5" \
+  --vm-start-schedule="40 8 * * 1-5" \
   --vm-stop-schedule="0 12 * * 1-5" \
   --timezone=$ZONA_HORARIA
 
@@ -168,14 +168,18 @@ VM está en [`infra/`](infra/):
 | `infra/actualizar-n8n.sh` | — (corre desde el repo) | Reinstala el arranque y el cron si cambiaron. Si cambió algo en `workflows/` o en `docker-compose.yml`, detiene n8n, importa y publica los workflows en un contenedor aparte y vuelve a levantarlo. Si no, no toca n8n. |
 | `infra/jobsearch-autoupdate.cron` | `/etc/cron.d/jobsearch-autoupdate` | Ejecuta la sincronización cada 5 minutos mientras la VM está encendida. |
 
-1. **Al encenderse la VM (9:00 AM L-V):** el metadato `startup-script` ejecuta la sincronización.
-2. **Mientras está encendida:** el cron la repite cada 5 minutos. Un push a `main` llega a la VM en
-   menos de 5 minutos, y uno que solo cambia documentación no reinicia n8n.
-3. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida en cada push la sintaxis
+1. **Al encenderse la VM (8:40 L-V):** el metadato `startup-script` ejecuta la sincronización y aplica todo lo pendiente antes del primer workflow (9:05).
+2. **Mientras está encendida:** el cron la repite cada 5 minutos. Un push que solo cambia
+   documentación no reinicia n8n. Uno que cambia workflows o el `docker-compose.yml` se
+   aplica en menos de 5 minutos fuera del horario de los workflows; de 9:00 a 12:00 queda
+   pendiente para el arranque siguiente, para no cortar ejecuciones.
+3. **Si una sincronización falla** con n8n detenido, el script lo vuelve a levantar y guarda
+   el registro en `/var/log/autoupdate-ultimo-error.log`.
+4. **En GitHub:** GitHub Actions (`.github/workflows/ci.yml`) valida en cada push la sintaxis
    de los workflows, que no usen nodos excluidos, el `docker-compose.yml` y los scripts de
-   `infra/`. Cada día hábil a las 7:00, `.github/workflows/version-n8n.yml` revisa si hay una
-   versión estable de n8n más nueva que la fijada; si la hay, la fija, valida el compose y la
-   sube a `main`, y la VM la aplica al encenderse.
+   `infra/`. De domingo a jueves a las 18:00, `.github/workflows/version-n8n.yml` revisa si hay
+   una versión estable de n8n más nueva que la fijada; si la hay, la fija, valida el compose
+   y la sube a `main`, y la VM la aplica en su arranque de las 8:40.
 
 La importación nunca corre con n8n encendido: n8n guarda todo en SQLite y dos procesos
 escribiendo a la vez bloquean la base.

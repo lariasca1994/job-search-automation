@@ -19,4 +19,4 @@ git config --system --get-all safe.directory | grep -qx "$REPO_DIR" \
 git fetch --quiet origin main
 git reset --quiet --hard origin/main
 
-exec bash "$REPO_DIR/infra/actualizar-n8n.sh"
+exec bash "$REPO_DIR/infra/actualizar-n8n.sh" "$@"
