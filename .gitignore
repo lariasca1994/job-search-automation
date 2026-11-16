@@ -6,3 +6,6 @@ node_modules/
 cbs_errores.txt
 CLAUDE.md
 CLAUDE.local.md
+
+# Guía de despliegue en la nube (operación interna): solo local
+DESPLIEGUE-GOOGLE-CLOUD.md

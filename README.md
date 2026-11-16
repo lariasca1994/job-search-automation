@@ -1,7 +1,7 @@
 # Automatización de búsqueda laboral con n8n + IA
 
 <p>
-  <img src="docs/horario-badge.svg" alt="Corre sola de lunes a viernes, de 9:00 a 12:00, en Google Cloud" height="32">
+  <img src="docs/horario-badge.svg" alt="Corre sola de lunes a viernes, de 9:00 a 12:00" height="32">
 </p>
 
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
@@ -14,17 +14,16 @@
 1. [Presentación](#1-presentación)
 2. [Estructura del proyecto](#2-estructura-del-proyecto)
 3. [Arquitectura](#3-arquitectura)
-4. [Plataformas y su función](#4-plataformas-y-su-función)
-5. [Cómo usar la plataforma](#5-cómo-usar-la-plataforma)
-6. [Instalación para pruebas](#6-instalación-para-pruebas)
-7. [Adáptalo a tu país](#7-adáptalo-a-tu-país)
-8. [Licencia](#8-licencia)
+4. [Cómo usar la plataforma](#4-cómo-usar-la-plataforma)
+5. [Instalación para pruebas](#5-instalación-para-pruebas)
+6. [Adáptalo a tu país](#6-adáptalo-a-tu-país)
+7. [Autor y licencia](#7-autor-y-licencia)
 
 ---
 
 ## 1. Presentación
 
-Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scrapea ofertas, las filtra, les asigna un % de compatibilidad contra tu hoja de vida (HV) usando un LLM, se queda solo con las mejores, genera una HV adaptada a cada una y te avisa por Telegram. Corre en una VM de Google Cloud con Docker.
+Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scrapea ofertas, las filtra, les asigna un % de compatibilidad contra tu hoja de vida (HV) usando un LLM, se queda solo con las mejores, genera una HV adaptada a cada una y te avisa por Telegram. Corre con Docker.
 
 ### En pocas palabras
 
@@ -33,8 +32,7 @@ Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scra
   encaja cada oferta con la hoja de vida. Solo se queda con las mejores.
 - **Qué entrega:** una planilla con las ofertas elegidas, una hoja de vida
   adaptada a cada una (sin inventar experiencia) y avisos por Telegram.
-- **Cómo ejecutarlo:** ve a [Instalación para pruebas](#6-instalación-para-pruebas); para
-  dejarlo en la nube, a [`DESPLIEGUE-GOOGLE-CLOUD.md`](DESPLIEGUE-GOOGLE-CLOUD.md).
+- **Cómo ejecutarlo:** ve a [Instalación para pruebas](#5-instalación-para-pruebas).
 
 ### Qué hace
 
@@ -51,12 +49,12 @@ Sistema self-hosted que automatiza la búsqueda de empleo de punta a punta: scra
   El Doc y el PDF se guardan en la carpeta del Drive definida en `DRIVE_CARPETA` (por defecto `HV`; se crea sola la primera vez). También puedes marcar filas a mano con una `X` en `generar`.
 - **Limpia el Drive** cada viernes: manda a la papelera los Docs y PDF de HV con más de 15 días (recuperables durante 30 días).
 - **Chequea anti-alucinación**: compara la HV generada contra la HV base y marca términos que no coinciden para revisarlos antes de enviarla.
-- **Te avisa por Telegram** cada HV lista (con botones al PDF, al Google Doc y a la oferta), más un resumen del día antes de que se apague la VM.
+- **Te avisa por Telegram** cada HV lista (con botones al PDF, al Google Doc y a la oferta), más un resumen del día al cierre de la jornada.
 - **Mide el embudo** (alto match → postulación → entrevista) con un resumen semanal los viernes.
 
 ### Horario (L-V, hora local)
 
-La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40 (para aplicar actualizaciones antes del primer workflow) y se apaga a las 12:00 (política de horario de GCP), así que todo ocurre dentro de esa ventana, viernes incluido:
+La hora local es la de `ZONA_HORARIA` en el `.env`. El servidor trabaja de 8:40 a 12:00, así que todo ocurre dentro de esa ventana, viernes incluido:
 
 | Hora | Workflow |
 |---|---|
@@ -75,11 +73,8 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40
 - [Gemini API](https://aistudio.google.com/apikey) (Google AI Studio), por su endpoint compatible con OpenAI. Si `gemini-3.8-flash` se queda sin cuota o está saturado, los workflows pasan solos a `gemini-flash-lite-latest` y luego a `gemini-3.5-flash-lite`.
 - Google Sheets + Google Docs + Google Drive API: CRM, HV en Google Docs y exportación a PDF.
 - Telegram Bot API: notificaciones.
-- n8n fijado en la versión `2.47.7`, la última estable, al día en seguridad. De domingo a jueves
-  por la tarde un workflow de GitHub Actions la actualiza solo si sale una estable más nueva.
-- La VM se sincroniza sola con `main` (al encender y cada 5 minutos); solo reinicia n8n
-  cuando cambian los workflows o el `docker-compose.yml`, y nunca de 9:00 a 12:00, mientras
-  corren los workflows.
+- n8n se mantiene en su última versión estable y se actualiza solo, nunca mientras corren los
+  workflows.
 
 ---
 
@@ -96,10 +91,9 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40
 │   ├── metricas-semanales.json      # embudo de conversión, viernes
 │   ├── botones-postulacion.json     # botones Apliqué / No apliqué de Telegram → estado en la planilla
 │   └── limpieza-drive-hv.json       # viernes: HV (Doc y PDF) con más de 15 días a la papelera
-├── infra/                   # sincronización de la VM con GitHub (arranque, script y cron)
+├── infra/                   # scripts de actualización del servidor
 ├── .github/workflows/       # CI, actualización diaria de n8n y depuración quincenal
 ├── docs/                    # diagrama de arquitectura y badge del horario
-├── DESPLIEGUE-GOOGLE-CLOUD.md
 └── README.md
 ```
 
@@ -108,7 +102,7 @@ La hora local es la de `ZONA_HORARIA` en el `.env`. La VM se enciende a las 8:40
 ## 3. Arquitectura
 
 <p align="center">
-  <img src="docs/arquitectura.svg" alt="Diagrama de arquitectura: n8n en una VM de Google Cloud con un recolector por cada portal de empleo, filtro, match con Gemini, HV adaptada en Google Docs, CRM en Google Sheets y avisos por Telegram" width="100%">
+  <img src="docs/arquitectura.svg" alt="Diagrama de arquitectura: n8n con un recolector por cada portal de empleo, filtro, match con Gemini, HV adaptada en Google Docs, CRM en Google Sheets y avisos por Telegram" width="100%">
 </p>
 
 - Los **scrapers** leen el HTML público de cada portal; el filtro descarta por
@@ -127,22 +121,7 @@ Los workflows son independientes entre sí y se coordinan únicamente a través 
 
 ---
 
-## 4. Plataformas y su función
-
-| Plataforma | Función en el proyecto |
-|---|---|
-| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Una VM con Docker corre n8n; una política de horario la enciende a las 8:40 y la apaga a las 12:00, de lunes a viernes. |
-| ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white) | Orquesta los workflows: recolección, filtro, evaluación con IA, HV adaptada, resumen y métricas. |
-| ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) | Empaqueta n8n con `docker-compose.yml`, igual en local y en la VM. |
-| ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white) | Califica el % de compatibilidad de cada oferta y redacta la HV adaptada. |
-| ![Google Sheets](https://img.shields.io/badge/Google_Sheets-34A853?style=for-the-badge&logo=googlesheets&logoColor=white) | Funciona como CRM: guarda las ofertas elegidas y coordina los workflows. |
-| ![Google Docs](https://img.shields.io/badge/Google_Docs-4285F4?style=for-the-badge&logo=googledocs&logoColor=white) | Guarda cada HV adaptada con formato real y enlaces clicables. |
-| ![Google Drive](https://img.shields.io/badge/Google_Drive-0F9D58?style=for-the-badge&logo=googledrive&logoColor=white) | Guarda Doc y PDF de cada HV en la carpeta `HV`, y los viernes manda a la papelera los de más de 15 días. |
-| ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) | Avisa cada HV lista y envía el resumen del día y las métricas semanales. |
-
----
-
-## 5. Cómo usar la plataforma
+## 4. Cómo usar la plataforma
 
 El sistema corre solo; tu trabajo diario ocurre en la planilla y en Telegram.
 
@@ -182,7 +161,7 @@ Cada aviso de HV lista en Telegram trae dos botones:
 
 En un par de minutos la planilla se actualiza y el mensaje marca con ● la opción elegida;
 puedes cambiarla tocando el otro botón. Telegram guarda los toques 24 horas: si tocas un
-botón con la VM apagada, se registra al encenderse; uno del viernes por la tarde ya no
+botón con el servidor apagado, se registra al encenderse; uno del viernes por la tarde ya no
 llega el lunes, así que ese márcalo a mano. También puedes editar `fecha_postulacion`
 (por ejemplo `2026-10-23` o `23/10/2026`) y `estado` directamente. El resumen de los
 viernes mide el embudo con estas columnas:
@@ -205,7 +184,7 @@ no se usan en los promedios, y "Esta semana" son los últimos 7 días según
 
 ---
 
-## 6. Instalación para pruebas
+## 5. Instalación para pruebas
 
 ### Configuración
 
@@ -255,24 +234,22 @@ fuente | titulo | empresa | ubicacion | url | keyword_busqueda | fecha_deteccion
    - En Google Cloud, la app OAuth debe estar **"En producción"**: en modo
      "Prueba" Google anula el permiso a los 7 días y la planilla deja de llenarse.
    - Redirect URI autorizada: `http://localhost:5678/rest/oauth2-credential/callback`.
-     En la VM, se entra al editor con un túnel SSH
-     (`gcloud compute ssh <nombre-de-la-vm> --zone <zona> --ssh-flag="-L 5678:localhost:5678" --ssh-flag="-N"`)
-     y se abre `http://localhost:5678`.
 4. Activa los workflows. Desde ese momento corren solos según el
    [horario](#horario-l-v-hora-local).
 
 ### Despliegue
 
-Para dejarlo en la nube, sigue [`DESPLIEGUE-GOOGLE-CLOUD.md`](DESPLIEGUE-GOOGLE-CLOUD.md).
+Puede correr en cualquier equipo o servidor con Docker. El horario de encendido y apagado se
+configura en la plataforma donde lo instales.
 
 ---
 
-## 7. Adáptalo a tu país
+## 6. Adáptalo a tu país
 
 Todo se ajusta desde el `.env`, sin tocar los workflows:
 
 1. **Zona horaria y país**: `ZONA_HORARIA` (formato IANA, ej. `America/Mexico_City`)
-   y `PAIS`. Si usas la VM con horario, crea la política de encendido/apagado en la
+   y `PAIS`. Si usas un servidor con horario, configura su encendido y apagado en la
    misma zona horaria.
 2. **Portales**:
    - **Computrabajo** tiene un dominio por país: cambia `COMPUTRABAJO_DOMINIO`
@@ -292,8 +269,13 @@ Todo se ajusta desde el `.env`, sin tocar los workflows:
 
 ---
 
-## 8. Licencia
+## 7. Autor y licencia
 
-> 📘 **[Manual de usuario](docs/MANUAL.md)**: cómo usar el sistema campo por campo, qué datos se ingresan y qué garantiza en seguridad.
+> 📘 **[Manual de usuario](docs/MANUAL.md)**: cómo usar el sistema día a día.
 
-MIT.
+**Luis F. A.** · [GitHub](https://github.com/lariasca1994) · [LinkedIn](https://linkedin.com/in/lfac1)
+
+Contacto: Telegram [@lfac6](https://t.me/lfac6) · WhatsApp [@carraian160](https://wa.me/carraian160) ·
+[ariascluisf@hotmail.com](mailto:ariascluisf@hotmail.com)
+
+Licencia: MIT.

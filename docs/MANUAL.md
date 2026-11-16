@@ -1,86 +1,75 @@
-# 📘 Manual de usuario · Job Search Automation
+# 📘 Manual de usuario · Automatización de búsqueda laboral
 
-Guía de uso diario: qué significa cada columna de la planilla, qué datos personales maneja el
-sistema y qué protege. Para la instalación y el despliegue vuelve al [README](../README.md).
+## 1. Portada
 
-> Es un sistema **self-hosted** y personal: no tiene demo pública. Corre en tu propia VM y trabaja
-> con tu hoja de vida, tu Google Drive y tu Telegram.
+![Cómo funciona la automatización de búsqueda laboral](img/manual/00-como-funciona.svg)
+
+| | |
+|---|---|
+| **Producto** | Automatización de búsqueda laboral (n8n + IA) |
+| **Documento** | Manual de usuario |
+| **Versión** | 2.0 · noviembre de 2026 |
+| **Dirigido a** | La persona que busca empleo y usa el sistema |
+| **Autor** | Luis F. A. |
 
 ## Contenido
 
-1. [Proyecto: objetivos y alcances](#1-proyecto-objetivos-y-alcances)
-2. [Glosario](#2-glosario)
-3. [Plataformas, base de datos y servicios](#3-plataformas-base-de-datos-y-servicios)
-4. [Paso a paso](#4-paso-a-paso)
-5. [Seguridad: tu información protegida](#5-seguridad-tu-información-protegida)
-6. [Agradecimientos](#6-agradecimientos)
+1. [Portada](#1-portada)
+2. [Introducción](#2-introducción)
+3. [Objetivo](#3-objetivo)
+4. [Alcance](#4-alcance)
+5. [Acceso al sistema](#5-acceso-al-sistema)
+6. [Pantalla principal](#6-pantalla-principal)
+7. [Navegación](#7-navegación)
+8. [Funcionalidades](#8-funcionalidades)
+9. [Gestión de perfil](#9-gestión-de-perfil)
+10. [Mensajes frecuentes](#10-mensajes-frecuentes)
+11. [Preguntas frecuentes](#11-preguntas-frecuentes)
+12. [Glosario](#12-glosario)
 
 ---
 
-## 1. Proyecto: objetivos y alcances
-
-### Objetivo
+## 2. Introducción
 
 Cada mañana de lunes a viernes, el sistema revisa cuatro portales de empleo, descarta lo que no
-encaja, pide a una IA (Gemini) que califique cada oferta contra tu hoja de vida (HV) y se queda con
-las 5 mejores de cada portal con **match ≥ 83 %** (filtrando que la oferta tenga máximo 3 días de publicación y salario igual o mayor al mínimo que definas, o no especificado). Para ellas genera una HV adaptada (sin inventar
-experiencia) en Google Docs y PDF, y te avisa por Telegram.
+encaja, le pide a una inteligencia artificial que califique cada oferta contra tu hoja de vida (HV)
+y se queda con las mejores. Para ellas genera una HV adaptada, sin inventar experiencia, y te avisa
+por Telegram.
 
-![Arquitectura](arquitectura.svg)
+No tiene una página web propia: trabajas con una **planilla de Google** y con los **mensajes de
+Telegram**. Este manual explica cómo usarlos.
 
-### Límites
+## 3. Objetivo
 
-- **Tu HV se envía a un proveedor de IA (Google Gemini)** en cada evaluación: no incluyas datos que
-  no pondrías en una postulación (documento de identidad, dirección exacta).
-- Según el tipo de cuenta, los términos de Google para la API de Gemini pueden permitir usar lo que
-  envías (tu HV y las ofertas) para mejorar sus productos: revísalos antes de usar tu propia key.
-- Entra a n8n solo por el túnel SSH del despliegue (`localhost:5678`); no abras ese puerto a internet.
-- Revisa siempre la HV adaptada antes de enviarla.
+Que encuentres a diario las ofertas que mejor encajan con tu perfil, con una HV adaptada a cada
+una, y lleves el seguimiento de tus postulaciones sin trabajo manual.
 
-## 2. Glosario
+## 4. Alcance
 
-Palabras técnicas que aparecen en este manual, explicadas en lenguaje simple.
+**Incluye:** búsqueda en cuatro portales, filtro por antigüedad, salario, cargo y zona, calificación
+con IA, HV adaptada en Google Docs y PDF, avisos y resumen diario por Telegram, botones para registrar
+tus postulaciones y métricas semanales.
 
-| Término | Qué significa |
-|---|---|
-| **API** | Puerta de entrada de un programa para que otros programas le pidan o le envíen datos. |
-| **Base de datos** | Lugar donde la aplicación guarda la información de forma ordenada y permanente. |
-| **Despliegue** | Publicar una nueva versión de la aplicación para que esté disponible en internet. |
-| **Métricas** | Medidas de un equipo como uso de CPU, memoria, disco o red. |
-| **Navegador** | Programa con el que abres páginas web: Chrome, Edge, Firefox, Safari. |
-| **Nube** | Servidores de una empresa (Amazon, Microsoft, Google, Oracle…) donde la aplicación funciona sin depender de un computador propio. |
-| **PDF** | Formato de documento que se ve igual en cualquier equipo. |
-| **Servidor** | Computador en la nube que atiende las peticiones de la aplicación. |
-| **Token** | Credencial temporal que la aplicación te entrega al iniciar sesión, en lugar de enviar tu contraseña en cada paso. |
-| **Variables de entorno / secretos** | Claves y contraseñas internas de la aplicación, guardadas fuera del código para que no queden expuestas. |
+**No incluye:** postularse por ti: tú revisas la HV y la subes al portal.
 
-## 3. Plataformas, base de datos y servicios
+**Qué necesitas:** acceso a tu planilla de Google y a Telegram en el celular.
 
-Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cada uno.
+## 5. Acceso al sistema
 
-| Plataforma | Tipo | Qué hace en el proyecto |
-|---|---|---|
-| ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white) | Nube | Una VM con Docker corre n8n; una política de horario la enciende a las 8:40 y la apaga a las 12:00, de lunes a viernes. |
-| ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white) | Automatización | Orquesta los workflows: recolección, filtro, evaluación con IA, HV adaptada, resumen y métricas. |
-| ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) | Contenedores | Empaqueta n8n con `docker-compose.yml`, igual en local y en la VM. |
-| ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white) | API / servicio externo (IA) | Califica el % de compatibilidad de cada oferta y redacta la HV adaptada. |
-| ![Google Sheets](https://img.shields.io/badge/Google_Sheets-34A853?style=for-the-badge&logo=googlesheets&logoColor=white) | API / servicio externo | Funciona como CRM: guarda las ofertas elegidas y coordina los workflows. |
-| ![Google Docs](https://img.shields.io/badge/Google_Docs-4285F4?style=for-the-badge&logo=googledocs&logoColor=white) | API / servicio externo | Guarda cada HV adaptada con formato real y enlaces clicables. |
-| ![Google Drive](https://img.shields.io/badge/Google_Drive-0F9D58?style=for-the-badge&logo=googledrive&logoColor=white) | API / servicio externo | Guarda Doc y PDF de cada HV en la carpeta `HV`, y los viernes manda a la papelera los de más de 15 días. |
-| ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) | API / servicio externo | Avisa cada HV lista y envía el resumen del día y las métricas semanales. |
+No hay usuario ni contraseña propios: entras a tu **planilla de Google** con tu cuenta de Google y
+recibes los avisos en el **chat de Telegram** configurado. Comparte la planilla como
+**Restringido** (solo tú), nunca "cualquiera con el enlace".
 
-## 4. Paso a paso
+## 6. Pantalla principal
 
-### 4.1 La planilla (Google Sheet)
-
-Cada fila es una oferta elegida:
+La **planilla** es la pantalla principal: cada fila es una oferta elegida.
 
 | Columna | Qué contiene | ¿La editas tú? |
 |---|---|---|
 | `fuente` | Portal de origen | No |
 | `titulo`, `empresa`, `ubicacion`, `url` | Datos de la oferta | No |
 | `match_pct` | Porcentaje de compatibilidad calculado por la IA | No |
-| `ats_tip` | Sugerencia para pasar filtros ATS | No |
+| `ats_tip` | Sugerencia para pasar filtros automáticos de selección | No |
 | `perfil_sugerido` | Perfil de búsqueda con el que encaja | No |
 | `generar` | `auto` (la eligió el sistema) o `X` para pedir una HV a mano | Sí |
 | `hv_adaptada` | Enlace al Google Doc de la HV adaptada | Bórralo para regenerarla |
@@ -88,73 +77,93 @@ Cada fila es una oferta elegida:
 | `posible_alucinacion` | Términos de la HV generada que no están en tu HV base, o `FALTAN ENLACES` | Revísalo antes de enviar |
 | `fecha_postulacion`, `estado` | Tu seguimiento | Sí |
 
-### 4.2 Rutina diaria (hora local)
+## 7. Navegación
+
+El sistema trabaja solo, en este horario (hora local):
 
 | Hora | Qué pasa |
 |---|---|
-| 9:05 – 9:50 | Recolección de los cuatro portales |
+| 9:05 – 9:50 | Búsqueda en los cuatro portales |
 | 10:05 – 11:35 (cada 15 min) | Generación de HV adaptadas y avisos por Telegram |
-| 11:40 (viernes) | Limpieza del Drive: HV con más de 15 días a la papelera |
+| 11:40 (viernes) | Limpieza: las HV con más de 15 días van a la papelera del Drive |
 | 11:45 | Resumen diario por Telegram |
-| 11:52 (viernes) | Métricas semanales del embudo |
+| 11:52 (viernes) | Métricas semanales |
 
-### 4.3 Antes de postularte
+A partir de las 10:00 abre la planilla para ver las ofertas del día; cada aviso de Telegram trae
+botones al PDF, al Google Doc y a la oferta.
+
+## 8. Funcionalidades
+
+### 8.1 Crear: pedir una HV para otra oferta
+
+Escribe una `X` en la columna `generar` de cualquier fila: el siguiente ciclo (cada 15 minutos, de
+10:05 a 11:35) crea su HV adaptada.
+
+### 8.2 Consultar: revisar la HV adaptada
 
 1. Abre el Google Doc de la oferta.
-2. Revisa `posible_alucinacion` y corrige lo que no sea cierto.
-3. Sube el **PDF**. Si corregiste el Doc, descarga un PDF nuevo (*Archivo → Descargar → PDF*).
-4. En el aviso de Telegram toca **✅ Apliqué** si te postulaste o **❌ No apliqué** si no.
-   La planilla se actualiza sola en un par de minutos (`estado` y `fecha_postulacion`) y el
-   mensaje marca con ● tu elección; puedes cambiarla con el otro botón. Si la VM estaba
-   apagada, el toque se registra al encenderse (Telegram lo guarda 24 horas).
-5. Si te llaman a entrevista, escribe `Entrevista` en `estado`. También puedes editar a mano
-   `estado` (`Postulado`, `Entrevista`, `Descartado`) y `fecha_postulacion` (por ejemplo
-   `2026-10-23` o `23/10/2026`). Las ofertas nuevas llegan como `Pendiente`.
+2. Revisa `posible_alucinacion` y corrige lo que no sea cierto; si dice `FALTAN ENLACES`, agrega el
+   enlace indicado.
+3. Para postularte, sube el **PDF**. Si corregiste el Doc, descarga un PDF nuevo
+   (*Archivo → Descargar → PDF*).
 
-### 4.4 Cómo leer las métricas de los viernes
+### 8.3 Modificar: registrar tus postulaciones y regenerar una HV
 
-Cada línea del mensaje dice entre paréntesis la columna de la planilla de la que sale:
+- En el aviso de Telegram toca **✅ Apliqué** si te postulaste o **❌ No apliqué** si no. La planilla
+  se actualiza sola en un par de minutos y el mensaje marca tu elección; puedes cambiarla con el otro
+  botón.
+- Si te llaman a entrevista, escribe `Entrevista` en `estado`. También puedes editar a mano `estado`
+  (`Postulado`, `Entrevista`, `Descartado`) y `fecha_postulacion`.
+- Para **regenerar una HV**, borra `hv_adaptada` y `hv_pdf` de la fila, dejando `auto` o `X` en
+  `generar`.
 
-| Sección | Qué mide | Columnas |
+### 8.4 Reportar: métricas de los viernes
+
+| Sección | Qué mide |
+|---|---|
+| Esta semana | Ofertas nuevas y postulaciones de los últimos 7 días |
+| En la planilla | Cuántas filas hay en cada estado y cuántas siguen por postular |
+| Embudo | De las ofertas con match alto, a cuántas te postulaste y cuántas llegaron a entrevista |
+| ¿El match predice bien? | Promedio de match de todas, de las postuladas y de las que llegaron a entrevista |
+| HV adaptada | Si las postuladas con HV adaptada llegan más a entrevista |
+| Por fuente | Ofertas y postulaciones de cada portal |
+
+## 9. Gestión de perfil
+
+Tu "perfil" es tu **HV base** y tus criterios de búsqueda (cargos, palabras clave, zona y salario
+mínimo), que se configuran una vez al instalar el sistema. Si cambian, quien administra el sistema
+los actualiza; las HV nuevas usarán la versión vigente.
+
+## 10. Mensajes frecuentes
+
+| Mensaje | Qué significa | Qué hacer |
 |---|---|---|
-| Esta semana | Ofertas nuevas y postulaciones de los últimos 7 días | `fecha_deteccion`, `fecha_postulacion` |
-| En la planilla | Cuántas filas hay en cada `estado` y cuántas siguen por postular | `estado`, `fecha_postulacion` |
-| Embudo | De las ofertas con match ≥ 83 %, a cuántas te postulaste; de las postuladas, cuántas llegaron a entrevista | `match_pct`, `estado` |
-| ¿El match predice bien? | Promedio de match de todas, de las postuladas y de las que llegaron a entrevista (sin contar 0 ni vacíos) | `match_pct` |
-| HV adaptada | Cuántas tienen Google Doc y PDF, y si las postuladas con HV llegan más a entrevista que las sin HV | `hv_adaptada`, `hv_pdf` |
-| Por fuente | Ofertas y postulaciones de cada portal | `fuente` |
+| `FALTAN ENLACES` en `posible_alucinacion` | La HV generada omitió un enlace de tu HV base | Agrégalo en el Doc antes de enviar |
+| Términos en `posible_alucinacion` | La HV menciona algo que no está en tu HV base | Verifícalo y corrígelo |
+| HV lista (Telegram) | Se generó la HV de una oferta | Revísala y postúlate |
+| Resumen del día (Telegram) | Las ofertas con match alto de hoy | Revisa las que te interesen |
 
-## 5. Seguridad: tu información protegida
+## 11. Preguntas frecuentes
 
-Tu confianza es lo primero: la plataforma solo pide los datos necesarios para funcionar, los protege y no los comparte con terceros. Esto es lo que se guarda y cómo se protege.
+**¿La IA inventa experiencia?** No debería: tiene reglas para no inventar empresas, títulos ni
+certificaciones, y la columna `posible_alucinacion` marca lo que no coincide con tu HV base. Revisa
+siempre la HV antes de enviarla.
 
-### Qué datos se guardan y dónde
+**¿Qué datos se envían a la IA?** Tu HV y las ofertas. No incluyas en la HV datos que no pondrías en
+una postulación (documento de identidad, dirección exacta).
 
-| Dato | Para qué se usa | Dónde queda |
-|---|---|---|
-| Tu HV base (experiencia, formación, contacto, enlaces) | Calificar ofertas y generar HV adaptadas | Variable `HV_BASE_TEXT` del `.env` en la VM; se envía a la API de Gemini en cada evaluación y generación |
-| Ofertas de empleo | Seleccionar las mejores | Tu Google Sheet; las descartadas se recuerdan 21 días para no reevaluarlas |
-| HV adaptadas (Doc y PDF) | Postularte | Carpeta `HV` de tu Drive; se borran a los 15 días (recuperables 30 días en la papelera) |
-| Credenciales (Gemini, Google OAuth2, Telegram) | Conectar los servicios | `.env` y credenciales de n8n en la VM; nunca en el repositorio |
+**Toqué un botón de Telegram y no se actualizó la planilla.** Si el sistema estaba apagado, se
+registra al encenderse; Telegram guarda los toques 24 horas.
 
-### Cómo se protege tu información
+**¿Dónde pido ayuda o reporto un problema?** Telegram [@lfac6](https://t.me/lfac6), WhatsApp
+[@carraian160](https://wa.me/carraian160) o [ariascluisf@hotmail.com](mailto:ariascluisf@hotmail.com).
 
-- **Todo corre en tu infraestructura:** n8n self-hosted en tu VM de Google Cloud; no hay un
-  servidor compartido con otras personas.
-- **Secretos fuera del repositorio:** API keys y tokens en el `.env` de la VM, excluido por
-  `.gitignore`; el acceso a Google usa OAuth2 con tu propia app.
-- **Sin inventar datos:** el nombre y la línea de contacto se copian textuales de tu HV base; la IA
-  no puede inventar experiencia, empresas, títulos ni certificaciones, y el chequeo
-  anti-alucinación marca cualquier término nuevo.
-- **Retención limitada:** las HV generadas en el Drive y el historial de ejecuciones se
-  borran a los 15 días.
-- **Al día en seguridad:** n8n se mantiene solo en su última versión estable: cada tarde de
-  domingo a jueves se revisa si salió una nueva y, si es así, se aplica automáticamente al
-  encender la VM, antes del primer workflow.
-- **VM encendida solo 3 horas y 20 minutos al día** (8:40 a 12:00), lo que reduce su exposición.
+## 12. Glosario
 
-## 6. Agradecimientos
-
-A mi familia, por su apoyo incondicional, su paciencia y por creer en cada proyecto incluso cuando apenas era una idea. Este trabajo también es de ustedes.
-
-Y a ti, que usas esta plataforma: cada prueba, comentario y sugerencia ayuda a que siga mejorando.
+| Término | Qué significa |
+|---|---|
+| **ATS** | Programa que usan las empresas para filtrar hojas de vida automáticamente |
+| **Embudo** | De todas las ofertas, cuántas pasan a postulación y cuántas a entrevista |
+| **HV adaptada** | Tu hoja de vida reescrita para resaltar lo que pide cada oferta |
+| **Match** | Porcentaje de compatibilidad entre la oferta y tu hoja de vida |
+| **Alucinación** | Algo que la IA escribe sin que esté en tu información original |
